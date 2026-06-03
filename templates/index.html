@@ -150,7 +150,7 @@
     document.getElementById('header-company').textContent=isAdmin?'All Companies':currentUser.company_name;
     document.getElementById('header-email').textContent=currentUser.email+(isAdmin?' · Admin':'');
     document.getElementById('header-sub').textContent=isAdmin
-      ?'Admin access · data from all companies'
+      ?'Admin · all companies by default, or name a company in your query'
       :`${currentUser.company_name} · company-scoped data only`;
     if(isAdmin){
       document.getElementById('admin-btn').classList.remove('hidden');
@@ -218,7 +218,7 @@
     await loadUser();
     const e=document.createElement('div');e.className='msg bot';
     e.innerHTML=`<div class="msg-label">billerq ai</div><div class="bubble">&#128075; Welcome back${currentUser?.role==='admin'?' Admin':''}! ${currentUser?.role==='admin'
-      ?'You have <strong>full access</strong> to data across <strong>all companies</strong>.'
+      ?'You see data from <strong>all companies</strong> by default. To filter, include a company name in your question — e.g. <em>"show customers for ABC Network"</em>.'
       :`You're viewing data for <strong>${esc(currentUser?.company_name||'your company')}</strong> only.`}<br><br>Ask in plain English or use the quick-action chips below.</div>`;
     chat.appendChild(e);
   });

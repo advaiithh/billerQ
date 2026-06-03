@@ -24,6 +24,9 @@ _CACHE_TTL = 3600  # 1 hour
 _BUSINESS_CONTEXT_CACHE = None
 _BUSINESS_CONTEXT_CACHE_TIME = 0
 
+_COMPANIES_LIST_CACHE = None
+_COMPANIES_LIST_CACHE_TIME = 0
+
 # ---------------------------------------------------
 # DATABASE CONNECTION
 # ---------------------------------------------------
@@ -148,6 +151,74 @@ def get_company_name(company_id: int) -> str:
     cursor.close()
     conn.close()
     return row[0] if row else "Unknown"
+
+
+def _get_companies_list_cached():
+    global _COMPANIES_LIST_CACHE, _COMPANIES_LIST_CACHE_TIME
+    current_time = time.time()
+    if (
+        _COMPANIES_LIST_CACHE is not None
+        and (current_time - _COMPANIES_LIST_CACHE_TIME) < _CACHE_TTL
+    ):
+        return _COMPANIES_LIST_CACHE
+    _COMPANIES_LIST_CACHE = get_companies()
+    _COMPANIES_LIST_CACHE_TIME = current_time
+    return _COMPANIES_LIST_CACHE
+
+
+def find_company_in_query(user_query: str) -> dict | None:
+    """Match a company name or id mentioned in the user's query."""
+    q = user_query.lower()
+
+    id_match = re.search(
+        r"\bcompany(?:\s+id)?\s*[=:#]?\s*(\d+)\b", q, re.IGNORECASE
+    )
+    if id_match:
+        cid = int(id_match.group(1))
+        name = get_company_name(cid)
+        if name != "Unknown":
+            return {"id": cid, "name": name}
+
+    companies = _get_companies_list_cached()
+    for company in sorted(companies, key=lambda c: len(c["name"]), reverse=True):
+        name_lower = company["name"].lower().strip()
+        if len(name_lower) < 3:
+            continue
+        if name_lower in q:
+            return company
+
+    for company in companies:
+        name_lower = company["name"].lower().strip()
+        words = [w for w in re.split(r"\W+", name_lower) if len(w) >= 4]
+        if len(words) >= 2 and all(w in q for w in words[:2]):
+            return company
+
+    return None
+
+
+def resolve_query_company_scope(user_query: str, user: dict) -> tuple[int | None, str]:
+    """
+    Determine company filter for a query.
+    Regular users: always their company.
+    Admin: all companies unless a specific company is named in the query.
+    """
+    is_admin = user.get("role") == "admin"
+    if not is_admin:
+        return user["company_id"], user["company_name"]
+
+    q = user_query.lower().strip()
+    all_companies_phrases = (
+        "all companies", "every company", "each company",
+        "show companies", "list companies", "all lcos",
+    )
+    if any(p in q for p in all_companies_phrases):
+        return None, "all companies"
+
+    detected = find_company_in_query(user_query)
+    if detected:
+        return detected["id"], detected["name"]
+
+    return None, "all companies"
 
 
 # ---------------------------------------------------

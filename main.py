@@ -9,7 +9,7 @@ from ai import natural_language_to_sql
 from config import OLLAMA_MODEL
 
 import database
-from database import run_query, get_connection, get_companies, get_company_name
+from database import run_query, get_connection, get_companies, get_company_name, resolve_query_company_scope
 from auth import (
     init_auth_tables,
     seed_admin_if_needed,
@@ -237,7 +237,8 @@ async def chat(body: ChatRequest, request: Request):
 
     user_msg = body.message.strip()
     is_admin = user["role"] == "admin"
-    company_id = None if is_admin else user["company_id"]
+
+    company_id, scope_label = resolve_query_company_scope(user_msg, user)
 
     if not user_msg:
         return JSONResponse({"success": False, "error": "Empty message"}, status_code=400)
@@ -268,7 +269,6 @@ async def chat(body: ChatRequest, request: Request):
                     explanation = retry_ai["explanation"]
 
         row_count = db_result["row_count"]
-        scope_label = "all companies" if is_admin else user["company_name"]
 
         if row_count > 0:
             summary = f"Found {row_count} record(s) for {scope_label}."
@@ -313,6 +313,8 @@ async def clear_cache(request: Request):
         database._COLUMNS_CACHE_TIME = 0
         database._BUSINESS_CONTEXT_CACHE = None
         database._BUSINESS_CONTEXT_CACHE_TIME = 0
+        database._COMPANIES_LIST_CACHE = None
+        database._COMPANIES_LIST_CACHE_TIME = 0
         return {"success": True, "message": "Cache cleared successfully"}
     except Exception as e:
         return JSONResponse({"success": False, "error": str(e)}, status_code=500)

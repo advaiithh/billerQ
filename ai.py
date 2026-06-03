@@ -212,7 +212,7 @@ def _build_sql_from_query(user_query: str, table: str) -> str:
 
     # LATEST / RECENT / NEW
     if any(w in user_lower for w in ["latest", "recent", "newest", "new"]):
-        return with_base(order_by=f"{date_col} DESC", limit=20)
+        return with_base(order_by=f"{date_col} DESC")
 
     # STATUS: active, pending, unpaid, paid, terminated, expired, suspended
     if _has_word(user_lower, "active"):
@@ -274,9 +274,10 @@ def _try_ollama_sql(user_query: str, company_id: int, table: str) -> str | None:
         else:
             company_scope = """COMPANY SCOPE (ADMIN — FULL ACCESS):
 - User is an ADMIN with access to ALL companies
-- Do NOT filter by company_id — return data across all companies
+- Do NOT filter by company_id unless the user explicitly asks for a specific company by name
+- If the user names a specific company, filter by that company_id only
 - Exclude soft-deleted rows: deleted_at IS NULL where deleted_at column exists
-- Include company_id in results when useful so admin can see which company each row belongs to"""
+- Include company_id in results when showing data across all companies"""
 
         prompt = f"""You are a MySQL expert for a billing system called BillerQ.
 Generate ONLY a single SELECT query. No explanation, no markdown unless using a sql code block.
