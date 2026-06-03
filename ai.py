@@ -146,34 +146,30 @@ def _build_sql_from_query(user_query: str, table: str) -> str:
     elif "top" in user_lower or "best" in user_lower or "highest" in user_lower:
         # TOP N query
         if "amount" in user_lower or "revenue" in user_lower or "sales" in user_lower:
-            return f"SELECT * FROM {table} ORDER BY amount DESC LIMIT 10;"
+            return f"SELECT * FROM {table} ORDER BY amount DESC;"
         elif "payment" in table or "order" in table:
-            return f"SELECT * FROM {table} ORDER BY amount DESC LIMIT 10;"
+            return f"SELECT * FROM {table} ORDER BY amount DESC;"
         else:
-            return f"SELECT * FROM {table} ORDER BY created_at DESC LIMIT 10;"
+            return f"SELECT * FROM {table} ORDER BY created_at DESC;"
             
     elif "latest" in user_lower or "recent" in user_lower or "new" in user_lower:
         # Latest/recent query
         date_col = "invoice_date" if table == "orders" else "created_at"
-        limit = "20" if "all" not in user_lower else "999999"
-        return f"SELECT * FROM {table} ORDER BY {date_col} DESC LIMIT {limit};"
+        return f"SELECT * FROM {table} ORDER BY {date_col} DESC;"
         
     elif "pending" in user_lower or "unpaid" in user_lower or "active" in user_lower:
         # Status-based query
         if "active" in user_lower:
             status_col = "status" if table in ["orders", "companies"] else ("payment_status" if table == "payments" else "status")
-            return f"SELECT * FROM {table} WHERE {status_col} = 'active' LIMIT 50;"
+            return f"SELECT * FROM {table} WHERE {status_col} = 'active';"
         elif "pending" in user_lower:
             status_col = "payment_status" if table == "payments" else "status"
-            return f"SELECT * FROM {table} WHERE {status_col} = 'pending' LIMIT 50;"
+            return f"SELECT * FROM {table} WHERE {status_col} = 'pending';"
         elif "unpaid" in user_lower:
-            return f"SELECT * FROM {table} WHERE payment_status = 'unpaid' LIMIT 50;"
+            return f"SELECT * FROM {table} WHERE payment_status = 'unpaid';"
     
-    # Default: show all with limit
-    if "all" in user_lower:
-        return f"SELECT * FROM {table};"
-    else:
-        return f"SELECT * FROM {table} LIMIT 50;"
+    # Default: show all
+    return f"SELECT * FROM {table};"
 
 
 # ---------------------------------------------------
