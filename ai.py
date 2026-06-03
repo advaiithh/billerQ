@@ -157,15 +157,18 @@ def _build_sql_from_query(user_query: str, table: str) -> str:
         date_col = "invoice_date" if table == "orders" else "created_at"
         return f"SELECT * FROM {table} ORDER BY {date_col} DESC;"
         
-    elif "pending" in user_lower or "unpaid" in user_lower or "active" in user_lower:
-        # Status-based query
-        if "active" in user_lower:
+    elif any(k in user_lower for k in ("inactive", "pending", "unpaid", "active")):
+        # Status-based query — check for specific words using word boundaries
+        if re.search(r"\binactive\b", user_lower):
+            status_col = "status" if table in ["orders", "companies"] else ("payment_status" if table == "payments" else "status")
+            return f"SELECT * FROM {table} WHERE {status_col} = 'inactive';"
+        if re.search(r"\bactive\b", user_lower):
             status_col = "status" if table in ["orders", "companies"] else ("payment_status" if table == "payments" else "status")
             return f"SELECT * FROM {table} WHERE {status_col} = 'active';"
-        elif "pending" in user_lower:
+        if re.search(r"\bpending\b", user_lower):
             status_col = "payment_status" if table == "payments" else "status"
             return f"SELECT * FROM {table} WHERE {status_col} = 'pending';"
-        elif "unpaid" in user_lower:
+        if re.search(r"\bunpaid\b", user_lower):
             return f"SELECT * FROM {table} WHERE payment_status = 'unpaid';"
     
     # Default: show all

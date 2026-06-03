@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Login</title>
+  </head>
+  <body>
+    <h2>Login</h2>
+    <form method="post" action="/login">
+      <label>Company:
+        <select name="company_id">
+          {% for id, name in companies %}
+            <option value="{{ id }}">{{ name }}</option>
+          {% endfor %}
+        </select>
+      </label>
+      <br>
+      <label>Email: <input type="email" name="email" required></label><br>
+      <label>Password: <input type="password" name="password" required></label><br>
+      <button type="submit">Login</button>
+    </form>
+    <p>Or <a href="/signup">Sign up</a></p>
+  </body>
+</html>

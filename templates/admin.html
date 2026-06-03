@@ -1,0 +1,21 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Admin - Approvals</title>
+  </head>
+  <body>
+    <h2>Pending Signups</h2>
+    <ul>
+      {% for u in users %}
+        <li>{{ u.email }} (company {{ u.company_id }})
+          <form method="post" action="/admin/approve" style="display:inline">
+            <input type="hidden" name="user_id" value="{{ u.id }}">
+            <button type="submit">Approve</button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+    <p><a href="/login">Back</a></p>
+  </body>
+</html>

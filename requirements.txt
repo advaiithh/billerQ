@@ -6,4 +6,5 @@ jinja2==3.1.4
 python-multipart==0.0.9
 langchain==0.1.14
 langchain-community==0.0.38
+bcrypt==4.0.1
 openai==1.14.0

@@ -79,6 +79,16 @@
   <button id="send-btn" onclick="send()">&#9658; Send</button>
 </div>
 <script>
+  // Redirect unauthenticated visitors to /login immediately
+  (async function checkAuth(){
+    try{
+      const r = await fetch('/me');
+      if(r.ok){
+        const j = await r.json();
+        if(!j.authenticated){ window.location.href = '/login'; }
+      }
+    }catch(e){ /* network errors: allow page to load and show friendly message */ }
+  })();
   const chat=document.getElementById('chat'),inp=document.getElementById('inp'),btn=document.getElementById('send-btn');
   const SW=['active','inactive','paid','pending','overdue','failed','cancelled','completed','premium','standard'];
   function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
