@@ -7,13 +7,31 @@
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Segoe UI', system-ui, sans-serif; background: #0d1117; color: #e6edf3; height: 100vh; display: flex; flex-direction: column; }
-    header { background: #161b22; border-bottom: 1px solid #30363d; padding: 14px 24px; display: flex; align-items: center; gap: 14px; }
+    header { background: #161b22; border-bottom: 1px solid #30363d; padding: 14px 24px; display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
     .logo { width: 38px; height: 38px; background: #1d9e75; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 15px; color: #fff; }
     header h1 { font-size: 16px; font-weight: 600; }
     header p { font-size: 12px; color: #7d8590; margin-top: 2px; }
-    .status { margin-left: auto; display: flex; align-items: center; gap: 7px; font-size: 12px; color: #1d9e75; }
+    .user-badge { margin-left: auto; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    .company-name { font-size: 12px; color: #58a6ff; background: #1a1f2e; border: 1px solid #388bfd; padding: 5px 12px; border-radius: 8px; max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .user-email { font-size: 11px; color: #7d8590; }
+    .hdr-btn { background: transparent; border: 1px solid #30363d; color: #8b949e; border-radius: 8px; padding: 5px 10px; font-size: 11px; cursor: pointer; }
+    .hdr-btn:hover { border-color: #1d9e75; color: #3fb950; }
+    .hdr-btn.admin { border-color: #388bfd; color: #58a6ff; }
+    .status { display: flex; align-items: center; gap: 7px; font-size: 12px; color: #1d9e75; }
     .dot { width: 8px; height: 8px; border-radius: 50%; background: #1d9e75; animation: pulse 2s infinite; }
     @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+    #admin-panel { display: none; background: #161b22; border-bottom: 1px solid #30363d; padding: 16px 24px; flex-shrink: 0; }
+    #admin-panel.open { display: block; }
+    #admin-panel h3 { font-size: 14px; margin-bottom: 12px; color: #58a6ff; }
+    .pending-list { display: flex; flex-direction: column; gap: 8px; max-height: 200px; overflow-y: auto; }
+    .pending-item { display: flex; align-items: center; gap: 12px; background: #0d1117; border: 1px solid #30363d; border-radius: 10px; padding: 10px 14px; font-size: 13px; }
+    .pending-item .info { flex: 1; }
+    .pending-item .email { font-weight: 600; }
+    .pending-item .meta { font-size: 11px; color: #7d8590; margin-top: 2px; }
+    .act-btn { border: none; border-radius: 6px; padding: 5px 12px; font-size: 11px; font-weight: 600; cursor: pointer; }
+    .act-approve { background: #1a3d2b; color: #3fb950; }
+    .act-reject { background: #3d1515; color: #f85149; }
+    .no-pending { font-size: 13px; color: #7d8590; }
     #chat { flex: 1; overflow-y: auto; padding: 24px; display: flex; flex-direction: column; gap: 20px; scroll-behavior: smooth; }
     .msg { display: flex; flex-direction: column; max-width: 90%; }
     .msg.user { align-self: flex-end; align-items: flex-end; }
@@ -47,42 +65,64 @@
     .typing span:nth-child(2){animation-delay:.2s} .typing span:nth-child(3){animation-delay:.4s}
     @keyframes blink { 0%,80%,100%{opacity:.25} 40%{opacity:1} }
     .error-box { background: #3d1515; border: 1px solid #f85149; color: #f85149; border-radius: 8px; padding: 10px 14px; font-size: 13px; }
-    .chips { padding: 10px 24px 4px; display: flex; gap: 8px; flex-wrap: wrap; background: #0d1117; border-top: 1px solid #21262d; }
+    .chips { padding: 10px 24px 4px; display: flex; gap: 8px; flex-wrap: wrap; background: #0d1117; border-top: 1px solid #21262d; flex-shrink: 0; }
     .chip { background: #161b22; border: 1px solid #30363d; border-radius: 20px; padding: 5px 14px; font-size: 12.5px; color: #8b949e; cursor: pointer; transition: all .15s; }
     .chip:hover { background: #1d2a22; color: #3fb950; border-color: #1d9e75; }
-    .input-bar { padding: 14px 24px 18px; background: #161b22; border-top: 1px solid #30363d; display: flex; gap: 10px; align-items: center; }
+    .input-bar { padding: 14px 24px 18px; background: #161b22; border-top: 1px solid #30363d; display: flex; gap: 10px; align-items: center; flex-shrink: 0; }
     #inp { flex: 1; background: #0d1117; border: 1px solid #30363d; border-radius: 10px; padding: 10px 16px; font-size: 14px; color: #e6edf3; outline: none; font-family: inherit; }
     #inp:focus { border-color: #1d9e75; }
     #inp::placeholder { color: #484f58; }
     #send-btn { background: #1d9e75; color: #fff; border: none; border-radius: 10px; padding: 10px 22px; font-size: 14px; font-family: inherit; cursor: pointer; }
     #send-btn:hover { background: #17856a; }
     #send-btn:disabled { background: #21262d; color: #7d8590; cursor: not-allowed; }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
+
 <header>
   <div class="logo">BQ</div>
-  <div><h1>BillerQ AI Assistant</h1><p>Qwen 2.5 7B · Ollama · MySQL · FastAPI</p></div>
-  <div class="status"><div class="dot"></div> Live</div>
+  <div><h1>BillerQ AI Assistant</h1><p id="header-sub">Loading…</p></div>
+  <div class="user-badge">
+    <span class="company-name" id="header-company">—</span>
+    <span class="user-email" id="header-email"></span>
+    <button class="hdr-btn admin hidden" id="admin-btn" onclick="toggleAdmin()">Pending Signups</button>
+    <button class="hdr-btn" onclick="doLogout()">Logout</button>
+    <div class="status"><div class="dot"></div> Live</div>
+  </div>
 </header>
+
+<div id="admin-panel">
+  <h3>Pending Signup Requests</h3>
+  <div class="pending-list" id="pending-list"></div>
+</div>
+
 <div id="chat"></div>
-<div class="chips">
+
+<div class="chips" id="chips">
   <div class="chip" onclick="sendChip(this)">Show all customers</div>
+  <div class="chip" onclick="sendChip(this)">Inactive customers</div>
   <div class="chip" onclick="sendChip(this)">Recent payments</div>
   <div class="chip" onclick="sendChip(this)">Latest invoices</div>
   <div class="chip" onclick="sendChip(this)">Active subscriptions</div>
+  <div class="chip" onclick="sendChip(this)">Inactive subscriptions</div>
   <div class="chip" onclick="sendChip(this)">Overdue invoices</div>
   <div class="chip" onclick="sendChip(this)">Top 5 orders by amount</div>
 </div>
+
 <div class="input-bar">
-  <input id="inp" placeholder="Ask anything about your business data…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send();}"/>
+  <input id="inp" placeholder="Ask anything about your company data…" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send();}"/>
   <button id="send-btn" onclick="send()">&#9658; Send</button>
 </div>
+
 <script>
   const chat=document.getElementById('chat'),inp=document.getElementById('inp'),btn=document.getElementById('send-btn');
-  const SW=['active','inactive','paid','pending','overdue','failed','cancelled','completed','premium','standard'];
+  let currentUser=null;
+
+  const SW=['active','inactive','paid','pending','overdue','failed','cancelled','completed','premium','standard','terminated','expired','suspended'];
+
   function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
-  function badge(v){const s=String(v).toLowerCase();if(['active','paid','completed'].includes(s))return'b-active';if(['pending','inactive'].includes(s))return'b-pending';if(['overdue','failed','cancelled'].includes(s))return'b-overdue';if(s==='premium')return'b-premium';if(s==='standard')return'b-standard';return'';}
+  function badge(v){const s=String(v).toLowerCase();if(['active','paid','completed'].includes(s))return'b-active';if(['pending','inactive'].includes(s))return'b-pending';if(['overdue','failed','cancelled','terminated','expired','suspended'].includes(s))return'b-overdue';if(s==='premium')return'b-premium';if(s==='standard')return'b-standard';return'';}
   function cell(v){const s=String(v);if(SW.includes(s.toLowerCase())){const c=badge(s);return c?`<span class="badge ${c}">${esc(s)}</span>`:esc(s);}return esc(s);}
   function tbl(cols,rows){let h='<div class="table-wrap"><table><thead><tr>';cols.forEach(c=>h+=`<th>${esc(c)}</th>`);h+='</tr></thead><tbody>';rows.forEach(r=>{h+='<tr>';r.forEach(v=>h+=`<td>${cell(v)}</td>`);h+='</tr>';});return h+'</tbody></table></div>';}
   function ins(list){if(!list||!list.length)return'';let h='<div class="insights-box"><div class="ins-title">&#128200; Smart Insights</div>';list.forEach(i=>h+=`<div class="insight-item">&#128161; ${esc(i)}</div>`);return h+'</div>';}
@@ -91,20 +131,97 @@
   function rmTyping(){document.getElementById('typ')?.remove();}
   function botMsg(d){
     const e=document.createElement('div');e.className='msg bot';
-    if(!d.success){e.innerHTML=`<div class="msg-label">billerq ai</div><div class="bubble"><div class="error-box">&#9888; ${esc(d.error)}</div></div>`;}
-    else{const t=d.rows&&d.rows.length?tbl(d.columns,d.rows):'<p style="color:#7d8590;margin-top:8px;">No records found.</p>';
-    e.innerHTML=`<div class="msg-label">billerq ai</div><div class="bubble">${d.summary?`<div class="section-label">Summary</div><div class="summary-box">&#128203; ${esc(d.summary)}</div>`:''}<div class="section-label">Generated SQL</div><div class="sql-block">${esc(d.sql)}</div><div class="section-label">Results</div>${t}<div class="row-count" style="margin-bottom:10px;">${d.row_count} row(s) returned</div>${ins(d.insights)}${d.explanation?`<div style="font-size:12px;color:#7d8590;margin-top:6px;">&#128196; ${esc(d.explanation)}</div>`:''}</div>`;}
+    if(!d.success){
+      if(d.error&&d.error.includes('log in')){window.location.href='/';}
+      e.innerHTML=`<div class="msg-label">billerq ai</div><div class="bubble"><div class="error-box">&#9888; ${esc(d.error)}</div></div>`;
+    }else{
+      const t=d.rows&&d.rows.length?tbl(d.columns,d.rows):'<p style="color:#7d8590;margin-top:8px;">No records found.</p>';
+      e.innerHTML=`<div class="msg-label">billerq ai</div><div class="bubble">${d.summary?`<div class="section-label">Summary</div><div class="summary-box">&#128203; ${esc(d.summary)}</div>`:''}<div class="section-label">Generated SQL</div><div class="sql-block">${esc(d.sql)}</div><div class="section-label">Results</div>${t}<div class="row-count" style="margin-bottom:10px;">${d.row_count} row(s) returned</div>${ins(d.insights)}${d.explanation?`<div style="font-size:12px;color:#7d8590;margin-top:6px;">&#128196; ${esc(d.explanation)}</div>`:''}</div>`;
+    }
     chat.appendChild(e);chat.scrollTop=chat.scrollHeight;
   }
+
+  async function loadUser(){
+    const r=await fetch('/auth/me');
+    if(!r.ok){window.location.href='/';return;}
+    const d=await r.json();
+    currentUser=d.user;
+    const isAdmin=currentUser.role==='admin';
+    document.getElementById('header-company').textContent=isAdmin?'All Companies':currentUser.company_name;
+    document.getElementById('header-email').textContent=currentUser.email+(isAdmin?' · Admin':'');
+    document.getElementById('header-sub').textContent=isAdmin
+      ?'Admin access · data from all companies'
+      :`${currentUser.company_name} · company-scoped data only`;
+    if(isAdmin){
+      document.getElementById('admin-btn').classList.remove('hidden');
+      loadPending();
+    }
+  }
+
+  async function doLogout(){
+    await fetch('/auth/logout',{method:'POST'});
+    window.location.href='/';
+  }
+
+  function toggleAdmin(){
+    document.getElementById('admin-panel').classList.toggle('open');
+    if(document.getElementById('admin-panel').classList.contains('open'))loadPending();
+  }
+
+  async function loadPending(){
+    const list=document.getElementById('pending-list');
+    try{
+      const r=await fetch('/admin/pending');
+      const d=await r.json();
+      if(!d.success){list.innerHTML=`<div class="no-pending">${esc(d.error)}</div>`;return;}
+      if(!d.pending.length){list.innerHTML='<div class="no-pending">No pending signup requests.</div>';return;}
+      list.innerHTML=d.pending.map(u=>`
+        <div class="pending-item">
+          <div class="info">
+            <div class="email">${esc(u.email)}</div>
+            <div class="meta">${esc(u.company_name)} · requested ${esc(u.created_at||'')}</div>
+          </div>
+          <button class="act-btn act-approve" onclick="approveUser(${u.id})">Approve</button>
+          <button class="act-btn act-reject" onclick="rejectUser(${u.id})">Reject</button>
+        </div>`).join('');
+    }catch(e){list.innerHTML='<div class="no-pending">Failed to load pending users.</div>';}
+  }
+
+  async function approveUser(id){
+    const r=await fetch('/admin/approve',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:id})});
+    const d=await r.json();
+    if(d.success)loadPending();
+    else alert(d.error||'Failed to approve');
+  }
+
+  async function rejectUser(id){
+    if(!confirm('Reject this signup request?'))return;
+    const r=await fetch('/admin/reject',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({user_id:id})});
+    const d=await r.json();
+    if(d.success)loadPending();
+    else alert(d.error||'Failed to reject');
+  }
+
   async function send(){
     const msg=inp.value.trim();if(!msg)return;
     inp.value='';btn.disabled=true;userMsg(msg);typing();
-    try{const r=await fetch('/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg})});const d=await r.json();rmTyping();botMsg(d);}
-    catch(e){rmTyping();botMsg({success:false,error:'Network error — is the server running?'});}
+    try{
+      const r=await fetch('/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg})});
+      const d=await r.json();rmTyping();botMsg(d);
+    }catch(e){rmTyping();botMsg({success:false,error:'Network error — is the server running?'});}
     finally{btn.disabled=false;inp.focus();}
   }
+
   function sendChip(el){inp.value=el.textContent;send();}
-  window.addEventListener('load',()=>{const e=document.createElement('div');e.className='msg bot';e.innerHTML='<div class="msg-label">billerq ai</div><div class="bubble">&#128075; Hello! I\'m the <strong>BillerQ AI Assistant</strong> powered by <strong>Qwen 2.5 7B</strong>.<br><br>Ask me anything about your business data in plain English. I\'ll generate the SQL, run it on MySQL, and explain the results.</div>';chat.appendChild(e);});
+
+  window.addEventListener('load',async()=>{
+    await loadUser();
+    const e=document.createElement('div');e.className='msg bot';
+    e.innerHTML=`<div class="msg-label">billerq ai</div><div class="bubble">&#128075; Welcome back${currentUser?.role==='admin'?' Admin':''}! ${currentUser?.role==='admin'
+      ?'You have <strong>full access</strong> to data across <strong>all companies</strong>.'
+      :`You're viewing data for <strong>${esc(currentUser?.company_name||'your company')}</strong> only.`}<br><br>Ask in plain English or use the quick-action chips below.</div>`;
+    chat.appendChild(e);
+  });
 </script>
 </body>
 </html>
