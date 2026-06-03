@@ -1,4 +1,6 @@
 @echo off
+cd /d "%~dp0"
+
 echo ================================================
 echo   BillerQ AI Assistant — Starting Server
 echo ================================================
@@ -6,14 +8,23 @@ echo ================================================
 pip install -r requirements.txt -q
 
 echo.
-echo Stopping any old server on port 8001...
-for /f "tokens=5" %%a in ('netstat -ano ^| findstr ":8001" ^| findstr "LISTENING"') do taskkill /PID %%a /F >nul 2>&1
+echo Stopping previous BillerQ servers...
+powershell -NoProfile -Command "Get-NetTCPConnection -LocalPort 8000,8001,8002 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force -ErrorAction SilentlyContinue }"
+timeout /t 2 /nobreak >nul
+
+set PORT=8000
+python -c "import socket; s=socket.socket(); r=s.connect_ex(('127.0.0.1',8000)); s.close(); exit(0 if r==0 else 1)" >nul 2>&1
+if %ERRORLEVEL%==0 (
+  echo WARNING: Port 8000 is in use by an OLD server ^(shows chat, not login^).
+  echo          Using port 8002 instead. Restart your PC to free port 8000.
+  set PORT=8002
+)
 
 echo.
-echo Server starting at: http://127.0.0.1:8001
-echo   Login page:       http://127.0.0.1:8001/login
+echo Open in browser:  http://127.0.0.1:%PORT%
+echo Login / Signup:    http://127.0.0.1:%PORT%/login
+echo.
 echo Press Ctrl+C to stop.
 echo.
 
-cd /d "%~dp0"
-uvicorn main:app --host 127.0.0.1 --port 8001 --reload
+uvicorn main:app --host 127.0.0.1 --port %PORT% --reload

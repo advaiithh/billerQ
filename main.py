@@ -26,11 +26,13 @@ BASE_DIR = Path(__file__).resolve().parent
 
 app = FastAPI(title="BillerQ AI Assistant")
 
-app.mount(
-    "/static",
-    StaticFiles(directory=str(BASE_DIR / "static")),
-    name="static",
-)
+STATIC_DIR = BASE_DIR / "static"
+if STATIC_DIR.is_dir():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+
+def _login_html() -> str:
+    return (BASE_DIR / "templates" / "login.html").read_text(encoding="utf-8-sig")
 
 SESSION_COOKIE = "bq_session"
 
@@ -91,11 +93,12 @@ def _clear_session(response: Response):
 
 
 @app.get("/", response_class=HTMLResponse)
+@app.get("/login", response_class=HTMLResponse)
+@app.get("/signup", response_class=HTMLResponse)
 async def login_page(request: Request):
     if get_current_user(request):
         return RedirectResponse(url="/app", status_code=302)
-    html_file = BASE_DIR / "templates" / "login.html"
-    return HTMLResponse(content=html_file.read_text(encoding="utf-8"))
+    return HTMLResponse(content=_login_html())
 
 
 @app.get("/app", response_class=HTMLResponse)
