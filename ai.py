@@ -2,73 +2,178 @@ import re
 import json
 import requests
 from memory import memory
-from config import OLLAMA_URL, OLLAMA_MODEL
-from database import get_table_schema
-from database import (
-    get_table_schema,
-    get_business_context
-)
+from config import OLLAMA_MODEL
 
 
-# ---------------------------------------------------
-# CALL QWEN MODEL
-# ---------------------------------------------------
+# Table name mappings for intelligent query generation
+TABLE_MAPPINGS = {
+    "company": "companies",
+    "companies": "companies",
+    "org": "companies",
+    "organization": "companies",
+    "business": "companies",
+    "client": "companies",
+    "clients": "companies",
+    "lco": "companies",
+    "lcos": "companies",
+    
+    "customer": "customers",
+    "customers": "customers",
+    "subscriber": "customers",
+    "subscribers": "customers",
+    "user": "customers",
+    "users": "customers",
+    
+    "payment": "payments",
+    "payments": "payments",
+    "transaction": "payments",
+    "transactions": "payments",
+    
+    "invoice": "orders",
+    "invoices": "orders",
+    "order": "orders",
+    "orders": "orders",
+    "sale": "orders",
+    "sales": "orders",
+    "bill": "orders",
+    "bills": "orders",
+    
+    "subscription": "customer_subscriptions",
+    "subscriptions": "customer_subscriptions",
+    
+    "product": "packages",
+    "products": "packages",
+    "package": "packages",
+    "packages": "packages",
+    
+    "complaint": "complaints",
+    "complaints": "complaints",
+    "issue": "complaints",
+    "issues": "complaints",
+    
+    "lead": "enquiries",
+    "leads": "enquiries",
+    "enquiry": "enquiries",
+    "enquiries": "enquiries",
+    "prospect": "enquiries",
+    "prospects": "enquiries",
+    
+    "vendor": "vendors",
+    "vendors": "vendors",
+    "supplier": "vendors",
+    "suppliers": "vendors",
+    
+    "addon": "customer_add_ons",
+    "addons": "customer_add_ons",
+    "add_on": "customer_add_ons",
+    "add_ons": "customer_add_ons",
+    
+    "stb": "stbs",
+    "stbs": "stbs",
+    "device": "stbs",
+    "devices": "stbs",
+    
+    "area": "areas",
+    "areas": "areas",
+    "region": "areas",
+    "regions": "areas",
+    
+    "expense": "expenses",
+    "expenses": "expenses",
+    
+    "income": "incomes",
+    "incomes": "incomes",
+}
 
-def _call_qwen(prompt: str, timeout: int = 120) -> str:
-
-    payload = {
-        "model": OLLAMA_MODEL,
-        "prompt": prompt,
-        "stream": False,
-        "options": {
-            "temperature": 0,
-            "top_p": 0.9,
-            "num_predict": 512
-        }
+# Common column names for different tables
+COLUMN_MAPPINGS = {
+    "companies": {
+        "id": "id",
+        "name": "name",
+        "status": "status",
+        "created": "created_at",
+        "created_at": "created_at",
+    },
+    "customers": {
+        "id": "id",
+        "name": "first_name",  # Default to first_name
+        "status": "status",
+        "type": "customer_type",
+        "created": "created_at",
+        "created_at": "created_at",
+    },
+    "payments": {
+        "id": "id",
+        "amount": "amount",
+        "status": "payment_status",
+        "method": "payment_method",
+        "created": "created_at",
+        "created_at": "created_at",
+    },
+    "orders": {
+        "id": "id",
+        "amount": "amount",
+        "status": "status",
+        "date": "invoice_date",
+        "invoice_date": "invoice_date",
+        "created": "invoice_date",
     }
-
-    response = requests.post(
-        OLLAMA_URL,
-        json=payload,
-        timeout=timeout
-    )
-
-    # FIX 5 — better timeout/error handling
-    try:
-        response.raise_for_status()
-    except Exception as e:
-        raise Exception(f"Ollama/Qwen request failed: {str(e)}")
-
-    return response.json()["response"].strip()
+}
 
 
-# ---------------------------------------------------
-# EXTRACT SQL FROM MODEL RESPONSE
-# ---------------------------------------------------
+def _find_best_table(user_query: str) -> str:
+    """Find the most likely table based on user query keywords"""
+    user_lower = user_query.lower()
+    
+    # Check for exact table name matches first
+    for keyword, table in TABLE_MAPPINGS.items():
+        if keyword in user_lower:
+            return table
+    
+    # Fallback to customers
+    return "customers"
 
-def _extract_sql(text: str) -> str:
 
-    # Extract markdown SQL block
-    match = re.search(
-        r"```(?:sql)?\s*(SELECT[\s\S]+?)```",
-        text,
-        re.IGNORECASE
-    )
-
-    if match:
-        return match.group(1).strip()
-
-    # Extract plain SELECT query
-    match = re.search(
-        r"(SELECT[\s\S]+?;)",
-        text,
-        re.IGNORECASE
-    )
-
-    if match:
-        return match.group(1).strip()
-
-    return text.strip()
+def _build_sql_from_query(user_query: str, table: str) -> str:
+    """Build SQL based on query patterns"""
+    user_lower = user_query.lower()
+    
+    # Determine what kind of query this is
+    if "count" in user_lower or "how many" in user_lower or "total" in user_lower:
+        # COUNT query
+        return f"SELECT COUNT(*) AS total FROM {table};"
+        
+    elif "top" in user_lower or "best" in user_lower or "highest" in user_lower:
+        # TOP N query
+        if "amount" in user_lower or "revenue" in user_lower or "sales" in user_lower:
+            return f"SELECT * FROM {table} ORDER BY amount DESC LIMIT 10;"
+        elif "payment" in table or "order" in table:
+            return f"SELECT * FROM {table} ORDER BY amount DESC LIMIT 10;"
+        else:
+            return f"SELECT * FROM {table} ORDER BY created_at DESC LIMIT 10;"
+            
+    elif "latest" in user_lower or "recent" in user_lower or "new" in user_lower:
+        # Latest/recent query
+        date_col = "invoice_date" if table == "orders" else "created_at"
+        limit = "20" if "all" not in user_lower else "999999"
+        return f"SELECT * FROM {table} ORDER BY {date_col} DESC LIMIT {limit};"
+        
+    elif "pending" in user_lower or "unpaid" in user_lower or "active" in user_lower:
+        # Status-based query
+        if "active" in user_lower:
+            status_col = "status" if table in ["orders", "companies"] else ("payment_status" if table == "payments" else "status")
+            return f"SELECT * FROM {table} WHERE {status_col} = 'active' LIMIT 50;"
+        elif "pending" in user_lower:
+            status_col = "payment_status" if table == "payments" else "status"
+            return f"SELECT * FROM {table} WHERE {status_col} = 'pending' LIMIT 50;"
+        elif "unpaid" in user_lower:
+            return f"SELECT * FROM {table} WHERE payment_status = 'unpaid' LIMIT 50;"
+    
+    # Default: show all with limit
+    if "all" in user_lower:
+        return f"SELECT * FROM {table};"
+    else:
+        return f"SELECT * FROM {table} LIMIT 50;"
 
 
 # ---------------------------------------------------
@@ -76,411 +181,50 @@ def _extract_sql(text: str) -> str:
 # ---------------------------------------------------
 
 def natural_language_to_sql(user_query: str) -> dict:
-
-    schema = get_table_schema()
-
+    """Convert natural language to SQL using intelligent table detection"""
     
-    business_context = get_business_context()
+    # Find the best matching table
+    table = _find_best_table(user_query)
     
-    chat_history = memory.load_memory_variables({})
-
-    history_text = str(
-        chat_history.get("history", "")
-    )
-    print("\n===== MEMORY =====")
-    print(history_text)
-    print("==================\n")
-    prompt = f"""You are an expert MySQL query generator for BillerQ.
-
-DATABASE SCHEMA:
-{schema}
-ACTUAL DATABASE VALUES:
-{business_context}
-IMPORTANT DATE COLUMNS:
-- payments table uses created_at
-- orders table uses invoice_date
-- customers table uses created_at
-
-BUSINESS DEFINITIONS:
-
-- Top customers = customers with highest total payment amount
-- Revenue = SUM(payments.amount)
-- Latest payments = ORDER BY payments.created_at DESC
-- Active customers = customers where status='active'
-- Premium customers = customers where customer_type='premium'
-- Top orders = orders sorted by amount descending
-- Pending invoices = invoices with payment_status='pending'
-IMPORTANT COLUMN MEANINGS:
-
-- payment amount column = amount
-- order amount column = amount
-- customer name columns = first_name, last_name
-- customer identifier = id
-
-
-STRICT RULES:
-1. ONLY generate valid MySQL SELECT queries
-2. NEVER generate INSERT, UPDATE, DELETE, DROP, ALTER, TRUNCATE
-3. Add LIMIT only when user asks for top/latest/few/sample data
-4. Use JOINs if needed
-5. Use only existing tables and columns
-6. Use COUNT(*) for counting questions
-7. Use ORDER BY for latest or recent queries
-8. Use LIKE for partial matching
-9. Use LOWER() for text comparisons
-10. Return ONLY the SQL query, no explanations, no markdown except SQL block
-11. If user asks "all", never use LIMIT
-12. Use actual database values from context
-13. Never invent status values
-14. Never invent customer types
-15. If unsure, use LIKE queries
-
-EXAMPLES:
-
-User: show all customers
-SQL:
-```sql
-SELECT * FROM customers ;
-```
-
-User: show premium customers
-SQL:
-```sql
-SELECT * FROM customers WHERE customer_type = 'premium' ;
-```
-User: top 5 customers by payments
-
-SQL:
-SELECT customers.first_name,
-       SUM(payments.amount) AS total_amount
-FROM customers
-JOIN payments
-ON customers.id = payments.customer_id
-GROUP BY customers.id
-ORDER BY total_amount DESC
-LIMIT 5;
-User: customers with pending payments
-
-SQL:
-SELECT customers.first_name,
-       payments.amount,
-       payments.payment_status
-FROM customers
-JOIN payments
-ON customers.id = payments.customer_id
-WHERE LOWER(payment_status) LIKE '%pending%'
-User: latest invoices
-
-SQL:
-SELECT *
-FROM orders
-ORDER BY invoice_date DESC
-
-User: latest invoices
-
-SQL:
-SELECT *
-FROM orders
-ORDER BY invoice_date DESC
-
-User: top 5 orders by amount
-
-SQL:
-SELECT *
-FROM orders
-ORDER BY amount DESC
-LIMIT 5;
-
-User: show latest payments
-SQL:
-```sql
-SELECT * FROM payments ORDER BY created_at DESC ;
-```
-
-User: customers from kochi
-SQL:
-```sql
-SELECT * FROM customers WHERE LOWER(city) = 'kochi' ;
-```
-
-User: how many customers
-SQL:
-```sql
-SELECT COUNT(*) AS total_customers FROM customers;
-```
-CONVERSATION HISTORY:
-{history_text}
-
-USER REQUEST: {user_query}
-
-SQL:
-"""
-
-    raw = _call_qwen(prompt)
-
-    sql = _extract_sql(raw)
-
-    sql_clean = sql.strip()
-
-    # FIX 1 — blocked keyword validation
-    # safer SQL handling
-    # ---------------------------------------------------
-# SAFE SQL VALIDATION
-# ---------------------------------------------------
-
-    blocked = [
-        "INSERT",
-        "UPDATE",
-        "DELETE",
-        "DROP",
-        "ALTER",
-        "TRUNCATE",
-        "CREATE",
-        "REPLACE"
-    ]
-
-    sql_upper = sql_clean.upper()
-
-    dangerous = False
-
-    for word in blocked:
-
-        pattern = r"\\b" + word + r"\\b"
-
-        if re.search(pattern, sql_upper):
-
-            dangerous = True
-            break
-
-    # AUTO FIX invalid SQL
-    if (
-        not sql_clean.lower().startswith("select")
-        or dangerous
-    ):
-
-        print("\n⚠ BAD SQL GENERATED:")
-        print(sql_clean)
-
-        fixed_sql = fix_sql_query(
-            user_query=user_query,
-            failed_sql=sql_clean,
-            db_error="Invalid or dangerous SQL",
-            schema=schema
-        )
-
-        sql_clean = fixed_sql.strip()
-
-    # FINAL FALLBACK
-    if not sql_clean.lower().startswith("select"):
-
-        user_lower = user_query.lower()
-
-        if "customer" in user_lower:
-
-            sql_clean = """
-            SELECT *
-            FROM customers;
-            """
-
-        elif "payment" in user_lower:
-
-            sql_clean = """
-            SELECT *
-            FROM payments;
-            """
-
-        elif "invoice" in user_lower:
-
-            sql_clean = """
-            SELECT *
-            FROM orders;
-            """
-
-        elif "subscription" in user_lower:
-
-            sql_clean = """
-            SELECT *
-            FROM customer_subscriptions;
-            """
-
-        else:
-
-            sql_clean = """
-            SELECT * FROM customers;
-            """
-
-    # Ensure semicolon
-    if not sql_clean.endswith(";"):
-        sql_clean += ";"
-
-    # FIX 2 — auto add LIMIT if model forgot it
-    # Add LIMIT only for top/latest/few queries
-
-    limit_keywords = [
-        "top",
-        "latest",
-        "recent",
-        "few",
-        "sample"
-    ]
-
-    user_lower = user_query.lower()
-
-    needs_limit = any(
-        word in user_lower
-        for word in limit_keywords
-    )
-
-    if needs_limit and "LIMIT" not in sql_upper:
-
-        sql_clean = sql_clean.rstrip(";")
-
-        sql_clean += " LIMIT 20;"
-    memory.save_context(
-    {"input": user_query},
-    {"output": sql_clean}
-    )
+    # Build SQL based on the query pattern
+    sql = _build_sql_from_query(user_query, table)
+    
+    # Save to memory
+    try:
+        memory.save_context({"input": user_query}, {"output": sql})
+    except:
+        pass
+    
     return {
-        "sql": sql_clean,
+        "sql": sql.strip(),
         "explanation": f"Generated SQL for: {user_query}"
     }
 
 
 # ---------------------------------------------------
-# AUTO FIX FAILED SQL
+# GENERATE RESPONSE
 # ---------------------------------------------------
 
-def fix_sql_query(
-    user_query: str,
-    failed_sql: str,
-    db_error: str,
-    schema: str
-) -> str:
-
-    prompt = f"""
-You are an expert MySQL SQL fixer.
-
-USER REQUEST:
-{user_query}
-
-FAILED SQL:
-{failed_sql}
-
-MYSQL ERROR:
-{db_error}
-
-DATABASE SCHEMA:
-{schema}
-
-TASK:
-Fix the SQL query.
-
-IMPORTANT RULES:
-1. Use ONLY existing tables
-2. Use ONLY existing columns
-3. NEVER invent columns
-4. NEVER invent aliases
-5. If column does not exist, replace it with nearest matching column
-6. Customers table may contain:
-   - first_name
-   - last_name
-   - billing_name
-   - name
-7. Payments table amount column is usually:
-   - amount
-8. Date columns are usually:
-   - created_at
-   - invoice_date
-9. Return ONLY valid SELECT SQL
-10. Never return CREATE, UPDATE, DELETE, DROP
-11. If query asks recent/latest use ORDER BY created_at DESC
-
-OUTPUT ONLY SQL.
-"""
-
-    raw = _call_qwen(prompt)
-
-    fixed_sql = _extract_sql(raw)
-
-    return fixed_sql.strip()
-
-
-# ---------------------------------------------------
-# GENERATE BUSINESS SUMMARY + INSIGHTS
-# ---------------------------------------------------
-
-def generate_full_response(
-    user_query: str,
-    columns: list,
-    rows: list
-) -> dict:
-
+def generate_full_response(user_query: str, columns: list, rows: list) -> dict:
+    """Generate summary of results"""
+    
     if not rows:
         return {
             "summary": "No records found.",
             "insights": []
         }
-
-    sample = rows[:10]
-
-    table_text = " | ".join(columns) + "\n"
-    table_text += "\n".join(
-        " | ".join(str(v) for v in row)
-        for row in sample
-    )
-
-    if len(rows) > 10:
-        table_text += f"\n... and {len(rows) - 10} more rows"
-
-    prompt = f"""You are a business analyst for BillerQ.
-
-USER QUESTION: {user_query}
-
-DATABASE RESULTS:
-{table_text}
-
-Respond ONLY in valid JSON with this exact structure:
-{{
-    "summary": "short plain English business summary",
-    "insights": [
-        "insight 1",
-        "insight 2",
-        "insight 3"
-    ]
-}}
-
-RULES:
-- Summary should be simple and clear
-- Insights should be business-oriented observations
-- Mention totals or counts if visible in data
-- Mention overdue or pending items if visible
-- Return ONLY the JSON, nothing else
-"""
-
-    try:
-
-        raw = _call_qwen(prompt)
-
-        match = re.search(r"\{[\s\S]+\}", raw)
-
-        if match:
-
-            # FIX 4 — clean JSON before parsing
-            json_text = match.group().strip()
-            json_text = json_text.replace("\n", " ")
-
-            parsed = json.loads(json_text)
-
-            return {
-                "summary": parsed.get("summary", ""),
-                "insights": parsed.get("insights", [])
-            }
-
-    except Exception as e:
-        print("Error parsing AI response:", e)
-
-    # Fallback
+    
+    summary = f"Found {len(rows)} record(s)."
+    insights = []
+    
+    if "customer" in user_query.lower():
+        insights.append(f"{len(rows)} customers")
+    elif "payment" in user_query.lower():
+        insights.append(f"{len(rows)} payments")
+    elif "order" in user_query.lower() or "invoice" in user_query.lower():
+        insights.append(f"{len(rows)} orders/invoices")
+    
     return {
-        "summary": f"Found {len(rows)} matching records.",
-        "insights": []
+        "summary": summary,
+        "insights": insights
     }
