@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>BillerQ — Login</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Login — BillerQ AI Assistant</title>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -16,95 +16,209 @@
       justify-content: center;
       padding: 24px;
     }
-    .card {
-      width: 100%;
-      max-width: 420px;
-      background: #161b22;
-      border: 1px solid #30363d;
-      border-radius: 14px;
-      padding: 32px;
-    }
+    .auth-wrap { width: 420px; max-width: 100%; }
+    .brand { text-align: center; margin-bottom: 28px; }
     .logo {
-      width: 48px; height: 48px;
-      background: #1d9e75;
-      border-radius: 12px;
-      display: flex; align-items: center; justify-content: center;
-      font-weight: 700; font-size: 18px; color: #fff;
-      margin-bottom: 16px;
+      width: 52px; height: 52px; background: #1d9e75; border-radius: 14px;
+      display: inline-flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: 18px; color: #fff; margin-bottom: 14px;
     }
-    h1 { font-size: 22px; margin-bottom: 6px; }
-    .sub { font-size: 13px; color: #7d8590; margin-bottom: 24px; }
-    label { display: block; font-size: 13px; color: #8b949e; margin-bottom: 6px; }
-    select, input {
-      width: 100%;
-      background: #0d1117;
-      border: 1px solid #30363d;
-      border-radius: 8px;
-      padding: 10px 12px;
-      font-size: 14px;
-      color: #e6edf3;
-      margin-bottom: 16px;
-      font-family: inherit;
+    .brand h1 { font-size: 22px; margin-bottom: 6px; }
+    .brand p { font-size: 13px; color: #7d8590; line-height: 1.5; }
+    .auth-card {
+      background: #161b22; border: 1px solid #30363d; border-radius: 16px;
+      padding: 28px; box-shadow: 0 8px 32px rgba(0,0,0,.35);
     }
-    select:focus, input:focus { outline: none; border-color: #1d9e75; }
-    button {
-      width: 100%;
-      background: #1d9e75;
-      color: #fff;
-      border: none;
-      border-radius: 8px;
-      padding: 12px;
-      font-size: 15px;
-      font-weight: 600;
-      cursor: pointer;
-      font-family: inherit;
+    .tabs { display: flex; gap: 4px; background: #0d1117; border-radius: 10px; padding: 4px; margin-bottom: 24px; }
+    .tab {
+      flex: 1; text-align: center; padding: 10px; border-radius: 8px; font-size: 14px;
+      font-weight: 600; cursor: pointer; color: #7d8590; border: none; background: transparent;
     }
-    button:hover { background: #17856a; }
-    .alert {
-      padding: 10px 12px;
-      border-radius: 8px;
-      font-size: 13px;
-      margin-bottom: 16px;
+    .tab.active { background: #1d9e75; color: #fff; }
+    .form-panel { display: none; }
+    .form-panel.active { display: block; }
+    label {
+      display: block; font-size: 11px; color: #7d8590; margin-bottom: 7px;
+      text-transform: uppercase; letter-spacing: .6px;
     }
-    .alert-error { background: #3d1515; border: 1px solid #f85149; color: #f85149; }
-    .alert-ok { background: #1a2a1e; border: 1px solid #1d9e75; color: #3fb950; }
-    .foot { text-align: center; margin-top: 20px; font-size: 13px; color: #7d8590; }
-    .foot a { color: #58a6ff; text-decoration: none; }
-    .foot a:hover { text-decoration: underline; }
+    input, select {
+      width: 100%; background: #0d1117; border: 1px solid #30363d; border-radius: 10px;
+      padding: 11px 14px; font-size: 14px; color: #e6edf3; outline: none;
+      margin-bottom: 16px; font-family: inherit;
+    }
+    input:focus, select:focus { border-color: #1d9e75; }
+    .submit-btn {
+      width: 100%; background: #1d9e75; color: #fff; border: none; border-radius: 10px;
+      padding: 12px; font-size: 14px; font-weight: 600; cursor: pointer; margin-top: 4px;
+    }
+    .submit-btn:hover { background: #17856a; }
+    .submit-btn:disabled { background: #21262d; color: #7d8590; cursor: not-allowed; }
+    .msg-box {
+      border-radius: 10px; padding: 12px 14px; font-size: 13px; margin-top: 16px;
+      line-height: 1.5; display: none;
+    }
+    .msg-error { background: #3d1515; border: 1px solid #f85149; color: #f85149; }
+    .msg-success { background: #1a2a1e; border: 1px solid #1d9e75; color: #3fb950; }
+    .admin-note {
+      margin-top: 20px; padding: 14px; background: #1a1f2e; border: 1px solid #388bfd;
+      border-radius: 10px; font-size: 12px; color: #8b949e; line-height: 1.6;
+    }
+    .admin-note strong { color: #58a6ff; }
   </style>
 </head>
 <body>
-  <div class="card">
-    <div class="logo">BQ</div>
-    <h1>Welcome back</h1>
-    <p class="sub">Sign in to access your company data</p>
+  <div class="auth-wrap">
+    <div class="brand">
+      <div class="logo">BQ</div>
+      <h1>BillerQ AI Assistant</h1>
+      <p>Sign in to access your company's billing data securely.</p>
+    </div>
 
-    {% if error %}
-    <div class="alert alert-error">{{ error }}</div>
-    {% endif %}
-    {% if message %}
-    <div class="alert alert-ok">{{ message }}</div>
-    {% endif %}
+    <div class="auth-card">
+      <div class="tabs">
+        <button class="tab active" id="tab-login" onclick="showTab('login')">Login</button>
+        <button class="tab" id="tab-signup" onclick="showTab('signup')">Sign Up</button>
+      </div>
 
-    <form method="post" action="/login">
-      <label for="company_id">Company</label>
-      <select name="company_id" id="company_id" required>
-        <option value="" disabled selected>Select your company</option>
-        {% for id, name in companies %}
-        <option value="{{ id }}">{{ name }}</option>
-        {% endfor %}
-      </select>
+      <div class="form-panel active" id="panel-login">
+        <form id="login-form" onsubmit="doLogin(event)">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" placeholder="you@company.com" required autocomplete="email"/>
 
-      <label for="email">Email</label>
-      <input type="email" name="email" id="email" required autocomplete="email" placeholder="you@company.com">
+          <label for="login-password">Password</label>
+          <input type="password" id="login-password" placeholder="Your password" required autocomplete="current-password"/>
 
-      <label for="password">Password</label>
-      <input type="password" name="password" id="password" required autocomplete="current-password" placeholder="••••••••">
+          <button type="submit" class="submit-btn" id="login-submit">Log In</button>
+        </form>
+      </div>
 
-      <button type="submit">Log in</button>
-    </form>
+      <div class="form-panel" id="panel-signup">
+        <form id="signup-form" onsubmit="doSignup(event)">
+          <label for="signup-company">Company</label>
+          <select id="signup-company" required>
+            <option value="">Loading companies…</option>
+          </select>
 
-    <p class="foot">No account? <a href="/signup">Sign up</a></p>
+          <label for="signup-email">Email</label>
+          <input type="email" id="signup-email" placeholder="you@company.com" required autocomplete="email"/>
+
+          <label for="signup-password">Password</label>
+          <input type="password" id="signup-password" placeholder="Min. 6 characters" required minlength="6" autocomplete="new-password"/>
+
+          <button type="submit" class="submit-btn" id="signup-submit">Create Account</button>
+        </form>
+        <p style="font-size:12px;color:#7d8590;margin-top:12px;line-height:1.5;">
+          After signup, an administrator must approve your account before you can log in.
+        </p>
+      </div>
+
+      <div class="msg-box msg-error" id="error-box"></div>
+      <div class="msg-box msg-success" id="success-box"></div>
+
+      <div class="admin-note">
+        <strong>Default admin:</strong> admin@billerq.com / admin123<br>
+        Admins can approve new signup requests from inside the app.
+      </div>
+    </div>
   </div>
+
+<script>
+  let companiesList=[];
+
+  function showTab(name){
+    document.getElementById('tab-login').classList.toggle('active',name==='login');
+    document.getElementById('tab-signup').classList.toggle('active',name==='signup');
+    document.getElementById('panel-login').classList.toggle('active',name==='login');
+    document.getElementById('panel-signup').classList.toggle('active',name==='signup');
+    hideMessages();
+  }
+
+  function showError(msg){
+    const el=document.getElementById('error-box');
+    el.textContent=msg;el.style.display='block';
+    document.getElementById('success-box').style.display='none';
+  }
+  function showSuccess(msg){
+    const el=document.getElementById('success-box');
+    el.textContent=msg;el.style.display='block';
+    document.getElementById('error-box').style.display='none';
+  }
+  function hideMessages(){
+    document.getElementById('error-box').style.display='none';
+    document.getElementById('success-box').style.display='none';
+  }
+
+  async function loadCompanies(){
+    try{
+      const r=await fetch('/companies');
+      const d=await r.json();
+      if(!d.success)throw new Error(d.error||'Failed to load companies');
+      companiesList=d.companies;
+      const sel=document.getElementById('signup-company');
+      sel.innerHTML='<option value="">— Select your company —</option>';
+      companiesList.forEach(c=>{
+        const o=document.createElement('option');
+        o.value=c.id;o.textContent=c.name;
+        sel.appendChild(o);
+      });
+    }catch(e){
+      document.getElementById('signup-company').innerHTML='<option value="">Failed to load</option>';
+      showError(e.message||'Could not load companies');
+    }
+  }
+
+  async function doLogin(e){
+    e.preventDefault();hideMessages();
+    const btn=document.getElementById('login-submit');
+    btn.disabled=true;
+    try{
+      const r=await fetch('/auth/login',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          email:document.getElementById('login-email').value.trim(),
+          password:document.getElementById('login-password').value
+        })
+      });
+      const d=await r.json();
+      if(!d.success){showError(d.error||'Login failed');return;}
+      window.location.href='/app';
+    }catch(err){showError('Network error — is the server running?');}
+    finally{btn.disabled=false;}
+  }
+
+  async function doSignup(e){
+    e.preventDefault();hideMessages();
+    const btn=document.getElementById('signup-submit');
+    const companyId=parseInt(document.getElementById('signup-company').value,10);
+    if(!companyId){showError('Please select a company');return;}
+    btn.disabled=true;
+    try{
+      const r=await fetch('/auth/signup',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          email:document.getElementById('signup-email').value.trim(),
+          password:document.getElementById('signup-password').value,
+          company_id:companyId
+        })
+      });
+      const d=await r.json();
+      if(!d.success){showError(d.error||'Signup failed');return;}
+      showSuccess(d.message);
+      document.getElementById('signup-form').reset();
+      setTimeout(()=>showTab('login'),2500);
+    }catch(err){showError('Network error — is the server running?');}
+    finally{btn.disabled=false;}
+  }
+
+  window.addEventListener('load',async()=>{
+    loadCompanies();
+    try{
+      const r=await fetch('/auth/me');
+      if(r.ok)window.location.href='/app';
+    }catch(_){}
+  });
+</script>
 </body>
 </html>

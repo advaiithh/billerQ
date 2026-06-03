@@ -1,408 +1,287 @@
 from pathlib import Path
-import re
 
-from fastapi import FastAPI, Request, Form, HTTPException
+from fastapi import FastAPI, Request, Depends, Response
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
+
+from ai import natural_language_to_sql
+from config import OLLAMA_MODEL
+
+import database
+from database import run_query, get_connection, get_companies, get_company_name, resolve_query_company_scope
+from auth import (
+    init_auth_tables,
+    seed_admin_if_needed,
+    create_user,
+    authenticate_user,
+    create_session_token,
+    verify_session_token,
+    list_pending_users,
+    approve_user,
+    reject_user,
+)
 
 BASE_DIR = Path(__file__).resolve().parent
 
-from ai import natural_language_to_sql, generate_full_response
-from auth import (
-    init_db,
-    create_user,
-    get_user_by_email,
-    create_session,
-    get_session,
-    list_pending_users,
-    approve_user,
-    verify_password,
-    logout_session,
-    count_users,
-)
-from database import get_connection, run_query
-import database
-
-templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
-STATIC_DIR = BASE_DIR / "static"
-
 app = FastAPI(title="BillerQ AI Assistant")
 
-COMPANY_SCOPED_TABLES = {
-    "customers",
-    "orders",
-    "payments",
-    "customer_subscriptions",
-    "customer_add_ons",
-    "packages",
-    "complaints",
-    "enquiries",
-    "stbs",
-    "expenses",
-    "incomes",
-}
+app.mount(
+    "/static",
+    StaticFiles(directory=str(BASE_DIR / "static")),
+    name="static",
+)
+
+SESSION_COOKIE = "bq_session"
 
 
 @app.on_event("startup")
-def startup_event():
-    init_db()
-    print("BillerQ routes: /login  /signup  /app  /admin  (open http://127.0.0.1:8001/login)")
+async def startup():
+    init_auth_tables()
+    seed_admin_if_needed()
 
 
-if STATIC_DIR.exists():
-    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+def get_current_user(request: Request):
+    token = request.cookies.get(SESSION_COOKIE)
+    user = verify_session_token(token) if token else None
+    return user
+
+
+def require_user(request: Request):
+    user = get_current_user(request)
+    if not user:
+        return None
+    return user
+
+
+def require_admin(request: Request):
+    user = get_current_user(request)
+    if not user or user["role"] != "admin":
+        return None
+    return user
 
 
 class ChatRequest(BaseModel):
     message: str
 
 
-def fetch_companies():
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT id, name FROM companies ORDER BY name")
-    companies = cur.fetchall()
-    conn.close()
-    return companies
+class AuthRequest(BaseModel):
+    email: str
+    password: str
+    company_id: int | None = None
 
 
-def company_name_by_id(company_id: int) -> str:
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT name FROM companies WHERE id = %s", (company_id,))
-    row = cur.fetchone()
-    conn.close()
-    return row[0] if row else f"Company #{company_id}"
+class UserActionRequest(BaseModel):
+    user_id: int
 
 
-def current_user_from_request(request: Request):
-    token = request.cookies.get("session_token")
-    if not token:
-        return None
-    return get_session(token)
-
-
-def require_user(request: Request):
-    user = current_user_from_request(request)
-    if not user:
-        raise HTTPException(status_code=401, detail="Not authenticated")
-    return user
-
-
-def apply_company_filter(sql: str, company_id: int) -> str:
-    """Inject company filter into simple SELECT queries."""
-    sql = sql.strip().rstrip(";")
-    m = re.match(
-        r"SELECT\s+(.*?)\s+FROM\s+([a-zA-Z0-9_]+)([\s\S]*)",
-        sql,
-        re.IGNORECASE,
-    )
-    if not m:
-        return sql + ";"
-
-    select_cols, table, rest = m.group(1), m.group(2), m.group(3)
-    table_lower = table.lower()
-
-    if table_lower == "companies":
-        clause = f"id = {int(company_id)}"
-    elif table_lower in COMPANY_SCOPED_TABLES:
-        clause = f"company_id = {int(company_id)}"
-    else:
-        return sql + ";"
-
-    if re.search(r"\bWHERE\b", rest, re.IGNORECASE):
-        if re.search(r"\bcompany_id\b", rest, re.IGNORECASE) or (
-            table_lower == "companies" and re.search(r"\bid\b", rest, re.IGNORECASE)
-        ):
-            return sql + ";"
-        new_sql = f"SELECT {select_cols} FROM {table} {rest} AND {clause}"
-    else:
-        new_sql = f"SELECT {select_cols} FROM {table} WHERE {clause} {rest}"
-
-    return new_sql.strip() + ";"
-
-
-def render_login(request: Request, error: str = None, message: str = None):
-    return templates.TemplateResponse(
-        "login.html",
-        {
-            "request": request,
-            "companies": fetch_companies(),
-            "error": error,
-            "message": message,
-        },
+def _set_session(response: Response, user: dict):
+    token = create_session_token(user)
+    response.set_cookie(
+        key=SESSION_COOKIE,
+        value=token,
+        httponly=True,
+        max_age=7 * 24 * 3600,
+        samesite="lax",
     )
 
 
-def render_signup(request: Request, error: str = None, message: str = None):
-    return templates.TemplateResponse(
-        "signup.html",
-        {
-            "request": request,
-            "companies": fetch_companies(),
-            "is_first_user": count_users() == 0,
-            "error": error,
-            "message": message,
-        },
-    )
-
-
-def render_admin_login(request: Request, error: str = None):
-    return templates.TemplateResponse(
-        "admin_login.html",
-        {"request": request, "error": error},
-    )
+def _clear_session(response: Response):
+    response.delete_cookie(SESSION_COOKIE)
 
 
 @app.get("/", response_class=HTMLResponse)
-async def root(request: Request):
-    user = current_user_from_request(request)
-    if user:
+async def login_page(request: Request):
+    if get_current_user(request):
         return RedirectResponse(url="/app", status_code=302)
-    return RedirectResponse(url="/login", status_code=302)
-
-
-@app.get("/login", response_class=HTMLResponse)
-async def login_get(request: Request):
-    if current_user_from_request(request):
-        return RedirectResponse(url="/app", status_code=302)
-    return render_login(request)
-
-
-@app.get("/admin-login", response_class=HTMLResponse)
-async def admin_login_get(request: Request):
-    # if already logged in as admin, go to admin
-    user = current_user_from_request(request)
-    if user and user.get("is_admin"):
-        return RedirectResponse(url="/admin", status_code=302)
-    return render_admin_login(request)
-
-
-@app.post("/login")
-async def login_post(
-    request: Request,
-    company_id: int = Form(...),
-    email: str = Form(...),
-    password: str = Form(...),
-):
-    email = email.strip().lower()
-    user = get_user_by_email(email)
-    if not user or not verify_password(password, user["password_hash"]):
-        return render_login(request, error="Invalid email or password.")
-    if int(user["company_id"]) != int(company_id):
-        return render_login(request, error="Selected company does not match your account.")
-    if not user["approved"]:
-        return render_login(
-            request,
-            error="Your account is pending admin approval. Please try again later.",
-        )
-
-    name = company_name_by_id(int(company_id))
-    token = create_session(user, name)
-    response = RedirectResponse(url="/app", status_code=302)
-    response.set_cookie("session_token", token, httponly=True, samesite="lax")
-    return response
-
-
-@app.post("/admin-login")
-async def admin_login_post(request: Request, email: str = Form(...), password: str = Form(...)):
-    email = email.strip().lower()
-    user = get_user_by_email(email)
-    if not user or not verify_password(password, user["password_hash"]):
-        return render_admin_login(request, error="Invalid email or password.")
-    if not user.get("is_admin"):
-        return render_admin_login(request, error="Account is not an administrator.")
-    if not user.get("approved"):
-        return render_admin_login(request, error="Admin account pending approval.")
-
-    token = create_session(user, "")
-    response = RedirectResponse(url="/admin", status_code=302)
-    response.set_cookie("session_token", token, httponly=True, samesite="lax")
-    return response
-
-
-@app.get("/signup", response_class=HTMLResponse)
-async def signup_get(request: Request):
-    if current_user_from_request(request):
-        return RedirectResponse(url="/app", status_code=302)
-    is_first = count_users() == 0
-    return templates.TemplateResponse(
-        "signup.html",
-        {
-            "request": request,
-            "companies": fetch_companies(),
-            "is_first_user": is_first,
-            "error": None,
-            "message": None,
-        },
-    )
-
-
-@app.post("/signup")
-async def signup_post(
-    request: Request,
-    company_id: int = Form(...),
-    email: str = Form(...),
-    password: str = Form(...),
-):
-    email = email.strip().lower()
-    is_first = count_users() == 0
-
-    if get_user_by_email(email):
-        return render_signup(request, error="An account with this email already exists.")
-
-    if len(password) < 6:
-        return render_signup(request, error="Password must be at least 6 characters.")
-
-    if is_first:
-        uid = create_user(
-            email, password, company_id, is_admin=True, approved=True
-        )
-        if not uid:
-            return render_signup(request, error="Could not create account. Try again.")
-        return render_signup(
-            request,
-            message="Administrator account created. You can log in now and approve other signups.",
-        )
-
-    uid = create_user(
-        email, password, company_id, is_admin=False, approved=False
-    )
-    if not uid:
-        return render_signup(request, error="Could not create account. Try again.")
-    return render_signup(
-        request,
-        message="Signup submitted. An administrator must approve your account before you can log in.",
-    )
-
-
-@app.get("/logout")
-async def logout(request: Request):
-    token = request.cookies.get("session_token")
-    if token:
-        logout_session(token)
-    response = RedirectResponse(url="/login", status_code=302)
-    response.delete_cookie("session_token")
-    return response
+    html_file = BASE_DIR / "templates" / "login.html"
+    return HTMLResponse(content=html_file.read_text(encoding="utf-8"))
 
 
 @app.get("/app", response_class=HTMLResponse)
-async def app_home(request: Request):
-    user = current_user_from_request(request)
-    if not user:
-        return RedirectResponse(url="/login", status_code=302)
-    return templates.TemplateResponse(
-        "index.html",
-        {"request": request, "user": user},
-    )
+async def app_page(request: Request):
+    if not get_current_user(request):
+        return RedirectResponse(url="/", status_code=302)
+    html_file = BASE_DIR / "templates" / "index.html"
+    return HTMLResponse(content=html_file.read_text(encoding="utf-8"))
 
 
-@app.get("/admin", response_class=HTMLResponse)
-async def admin_get(request: Request):
-    user = current_user_from_request(request)
-    if not user or not user.get("is_admin"):
-        return RedirectResponse(url="/login", status_code=302)
-
-    pending = list_pending_users()
-    for u in pending:
-        u["company_name"] = company_name_by_id(int(u["company_id"]))
-
-    companies = fetch_companies()
-
-    return templates.TemplateResponse(
-        "admin.html",
-        {"request": request, "users": pending, "admin": user, "companies": companies},
-    )
+@app.get("/companies")
+async def list_companies():
+    try:
+        companies = get_companies()
+        return {"success": True, "companies": companies}
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
 
-@app.post("/admin/approve")
-async def admin_approve(request: Request, user_id: int = Form(...)):
-    user = current_user_from_request(request)
-    if not user or not user.get("is_admin"):
-        return RedirectResponse(url="/login", status_code=302)
-    approve_user(int(user_id))
-    return RedirectResponse(url="/admin", status_code=302)
+@app.post("/auth/signup")
+async def signup(body: AuthRequest):
+    if not body.company_id:
+        return JSONResponse(
+            {"success": False, "error": "Please select a company"},
+            status_code=400,
+        )
+    try:
+        user = create_user(body.email, body.password, body.company_id)
+        return {
+            "success": True,
+            "message": (
+                "Signup successful! Your account is pending admin approval. "
+                "You will be able to log in once an administrator approves your request."
+            ),
+            "user": {
+                "email": user["email"],
+                "company_name": user["company_name"],
+                "status": user["status"],
+            },
+        }
+    except ValueError as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=400)
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
 
-@app.get("/me")
+@app.post("/auth/login")
+async def login(body: AuthRequest, response: Response):
+    try:
+        user = authenticate_user(body.email, body.password)
+        _set_session(response, user)
+        return {
+            "success": True,
+            "user": {
+                "id": user["id"],
+                "email": user["email"],
+                "role": user["role"],
+                "company_id": user["company_id"],
+                "company_name": user["company_name"],
+            },
+        }
+    except ValueError as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=401)
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/auth/logout")
+async def logout(response: Response):
+    _clear_session(response)
+    return {"success": True}
+
+
+@app.get("/auth/me")
 async def me(request: Request):
-    user = current_user_from_request(request)
+    user = get_current_user(request)
     if not user:
-        return {"authenticated": False}
+        return JSONResponse({"success": False, "error": "Not authenticated"}, status_code=401)
     return {
-        "authenticated": True,
+        "success": True,
         "user": {
-            "id": user.get("id"),
-            "email": user.get("email"),
-            "company_id": user.get("company_id"),
-            "company_name": user.get("company_name"),
-            "is_admin": user.get("is_admin"),
+            "id": user["id"],
+            "email": user["email"],
+            "role": user["role"],
+            "company_id": user["company_id"],
+            "company_name": user["company_name"],
         },
     }
 
 
+@app.get("/admin/pending")
+async def admin_pending(request: Request):
+    admin = require_admin(request)
+    if not admin:
+        return JSONResponse({"success": False, "error": "Admin access required"}, status_code=403)
+    try:
+        pending = list_pending_users()
+        return {"success": True, "pending": pending}
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/admin/approve")
+async def admin_approve(body: UserActionRequest, request: Request):
+    admin = require_admin(request)
+    if not admin:
+        return JSONResponse({"success": False, "error": "Admin access required"}, status_code=403)
+    try:
+        approve_user(body.user_id, admin["id"])
+        return {"success": True, "message": "User approved successfully"}
+    except ValueError as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=400)
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/admin/reject")
+async def admin_reject(body: UserActionRequest, request: Request):
+    admin = require_admin(request)
+    if not admin:
+        return JSONResponse({"success": False, "error": "Admin access required"}, status_code=403)
+    try:
+        reject_user(body.user_id, admin["id"])
+        return {"success": True, "message": "User rejected"}
+    except ValueError as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=400)
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+
 @app.post("/chat")
 async def chat(body: ChatRequest, request: Request):
-    user = current_user_from_request(request)
+    user = require_user(request)
     if not user:
         return JSONResponse(
-            {"success": False, "error": "Please log in to continue."},
+            {"success": False, "error": "Please log in to continue"},
             status_code=401,
         )
 
     user_msg = body.message.strip()
-    if not user_msg:
-        return JSONResponse(
-            {"success": False, "error": "Empty message"},
-            status_code=400,
-        )
+    is_admin = user["role"] == "admin"
 
-    company_id = int(user["company_id"])
+    company_id, scope_label = resolve_query_company_scope(user_msg, user)
+
+    if not user_msg:
+        return JSONResponse({"success": False, "error": "Empty message"}, status_code=400)
 
     try:
-        ai_result = natural_language_to_sql(user_msg)
-        sql = apply_company_filter(ai_result["sql"], company_id)
+        ai_result = natural_language_to_sql(user_msg, company_id=company_id)
+        sql = ai_result["sql"]
         explanation = ai_result["explanation"]
+        method = ai_result.get("method", "rules")
 
         db_result = run_query(sql)
 
-        if db_result["row_count"] == 0 and any(
-            word in user_msg.lower()
-            for word in ["show", "get", "find", "list"]
+        if (
+            db_result["row_count"] == 0
+            and method == "rules"
+            and any(w in user_msg.lower() for w in ["show", "get", "find", "list"])
         ):
-            retry_prompt = f"""
-            The SQL returned 0 rows.
+            retry_ai = natural_language_to_sql(
+                f"{user_msg} (include all matching statuses, use correct column names)",
+                company_id=company_id,
+            )
+            retry_sql = retry_ai["sql"]
+            if retry_sql != sql:
+                retry_result = run_query(retry_sql)
+                if retry_result["row_count"] > 0:
+                    sql = retry_sql
+                    db_result = retry_result
+                    explanation = retry_ai["explanation"]
 
-            Original user request:
-            {user_msg}
-
-            SQL used:
-            {sql}
-
-            Try again using similar database values.
-            """
-            retry_ai = natural_language_to_sql(retry_prompt)
-            retry_sql = apply_company_filter(retry_ai["sql"], company_id)
-            retry_result = run_query(retry_sql)
-            if retry_result["row_count"] > 0:
-                sql = retry_sql
-                db_result = retry_result
-
-        columns = db_result["columns"]
-        rows = db_result["rows"]
         row_count = db_result["row_count"]
 
         if row_count > 0:
-            summary = f"Found {row_count} record(s) for your company."
+            summary = f"Found {row_count} record(s) for {scope_label}."
             insights = []
-            if "customer" in user_msg.lower() and row_count > 1:
-                insights.append(f"{row_count} customers retrieved")
-            elif "payment" in user_msg.lower() and row_count > 1:
-                insights.append(f"{row_count} payment records retrieved")
+            q = user_msg.lower()
+            if "customer" in q and row_count > 1:
+                insights.append(f"{row_count} customer records for {scope_label}")
+            elif "payment" in q and row_count > 1:
+                insights.append(f"{row_count} payment records for {scope_label}")
+            elif ("order" in q or "invoice" in q) and row_count > 1:
+                insights.append(f"{row_count} invoice/order records for {scope_label}")
         else:
-            summary = "No records found matching your query."
+            summary = f"No records found for {scope_label} matching your query."
             insights = []
 
         return {
@@ -411,53 +290,34 @@ async def chat(body: ChatRequest, request: Request):
             "explanation": explanation,
             "summary": summary,
             "insights": insights,
-            "columns": columns,
-            "rows": rows,
+            "columns": db_result["columns"],
+            "rows": db_result["rows"],
             "row_count": row_count,
+            "company": scope_label,
+            "is_admin": is_admin,
         }
 
     except Exception as e:
-        return JSONResponse(
-            {"success": False, "error": str(e)},
-            status_code=500,
-        )
-
-
-@app.post("/analyze")
-async def analyze(body: ChatRequest, request: Request):
-    require_user(request)
-    try:
-        user_msg = body.message.strip()
-        if not user_msg:
-            return JSONResponse(
-                {"success": False, "error": "Empty message"},
-                status_code=400,
-            )
-        return {
-            "success": True,
-            "message": "Use /chat endpoint for complete analysis",
-        }
-    except Exception as e:
-        return JSONResponse(
-            {"success": False, "error": str(e)},
-            status_code=500,
-        )
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
 
 @app.post("/cache/clear")
 async def clear_cache(request: Request):
-    require_user(request)
+    admin = require_admin(request)
+    if not admin:
+        return JSONResponse({"success": False, "error": "Admin access required"}, status_code=403)
     try:
         database._SCHEMA_CACHE = None
         database._SCHEMA_CACHE_TIME = 0
+        database._COLUMNS_CACHE = None
+        database._COLUMNS_CACHE_TIME = 0
         database._BUSINESS_CONTEXT_CACHE = None
         database._BUSINESS_CONTEXT_CACHE_TIME = 0
+        database._COMPANIES_LIST_CACHE = None
+        database._COMPANIES_LIST_CACHE_TIME = 0
         return {"success": True, "message": "Cache cleared successfully"}
     except Exception as e:
-        return JSONResponse(
-            {"success": False, "error": str(e)},
-            status_code=500,
-        )
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
 
 @app.get("/health")
@@ -465,13 +325,6 @@ async def health():
     try:
         conn = get_connection()
         conn.close()
-        return {
-            "status": "ok",
-            "database": "connected",
-            "model": "qwen2.5:7b ",
-        }
+        return {"status": "ok", "database": "connected", "model": OLLAMA_MODEL}
     except Exception as e:
-        return JSONResponse(
-            {"status": "error", "detail": str(e)},
-            status_code=500,
-        )
+        return JSONResponse({"status": "error", "detail": str(e)}, status_code=500)
