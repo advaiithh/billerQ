@@ -1,21 +1,113 @@
-<!doctype html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <title>Admin - Approvals</title>
-  </head>
-  <body>
-    <h2>Pending Signups</h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BillerQ — Admin approvals</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0d1117;
+      color: #e6edf3;
+      min-height: 100vh;
+      padding: 24px;
+    }
+    .wrap { max-width: 720px; margin: 0 auto; }
+    header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 28px;
+      flex-wrap: wrap;
+    }
+    .logo {
+      width: 40px; height: 40px;
+      background: #1d9e75;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; color: #fff;
+    }
+    h1 { font-size: 20px; }
+    .nav { margin-left: auto; display: flex; gap: 12px; font-size: 13px; }
+    .nav a { color: #58a6ff; text-decoration: none; }
+    .nav a:hover { text-decoration: underline; }
+    .empty {
+      color: #7d8590;
+      padding: 24px;
+      border: 1px dashed #30363d;
+      border-radius: 10px;
+      text-align: center;
+    }
+    ul { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    li {
+      background: #161b22;
+      border: 1px solid #30363d;
+      border-radius: 10px;
+      padding: 16px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .email { font-weight: 600; }
+    .meta { font-size: 13px; color: #7d8590; flex: 1; }
+    button {
+      background: #1d9e75;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 8px 16px;
+      font-size: 13px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    button:hover { background: #17856a; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="logo">BQ</div>
+      <div>
+        <h1>Pending signups</h1>
+        <p style="font-size:13px;color:#7d8590;margin-top:4px;">Logged in as {{ admin.email }}</p>
+      </div>
+      <div class="nav">
+        <a href="/app">← Back to app</a>
+        <a href="/logout">Log out</a>
+      </div>
+    </header>
+
+    <section style="margin-bottom:20px;">
+      <h2 style="font-size:14px;color:#7d8590;margin-bottom:8px;">Companies</h2>
+      {% if companies %}
+      <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+        {% for c in companies %}
+          <div style="background:#0d1117;border:1px solid #30363d;padding:6px 10px;border-radius:8px;color:#8b949e;font-size:13px;">{{ c[1] }} <span style="opacity:.6;font-size:12px;">(#{{ c[0] }})</span></div>
+        {% endfor %}
+      </div>
+      {% else %}
+        <p class="empty">No companies found in the database.</p>
+      {% endif %}
+    </section>
+
+    {% if users %}
     <ul>
       {% for u in users %}
-        <li>{{ u.email }} (company {{ u.company_id }})
-          <form method="post" action="/admin/approve" style="display:inline">
-            <input type="hidden" name="user_id" value="{{ u.id }}">
-            <button type="submit">Approve</button>
-          </form>
-        </li>
+      <li>
+        <span class="email">{{ u.email }}</span>
+        <span class="meta">{{ u.company_name }}</span>
+        <form method="post" action="/admin/approve">
+          <input type="hidden" name="user_id" value="{{ u.id }}">
+          <button type="submit">Approve</button>
+        </form>
+      </li>
       {% endfor %}
     </ul>
-    <p><a href="/login">Back</a></p>
-  </body>
+    {% else %}
+    <p class="empty">No pending signups. New requests will appear here.</p>
+    {% endif %}
+  </div>
+</body>
 </html>

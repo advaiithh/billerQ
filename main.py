@@ -1,17 +1,15 @@
 from pathlib import Path
 import re
 
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi import FastAPI, Request, Form, HTTPException
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 
 BASE_DIR = Path(__file__).resolve().parent
 
-from ai import (
-    natural_language_to_sql,
-    generate_full_response
-)
+from ai import natural_language_to_sql, generate_full_response
 from auth import (
     init_db,
     create_user,
@@ -19,193 +17,361 @@ from auth import (
     create_session,
     get_session,
     list_pending_users,
-    approve_user
+    approve_user,
+    verify_password,
+    logout_session,
+    count_users,
 )
 from database import get_connection, run_query
 import database
-from fastapi import Request, Form
-from fastapi.responses import RedirectResponse
-from fastapi.templating import Jinja2Templates
 
 templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 STATIC_DIR = BASE_DIR / "static"
 
-app = FastAPI(
-    title="BillerQ AI Assistant"
-)
+app = FastAPI(title="BillerQ AI Assistant")
+
+COMPANY_SCOPED_TABLES = {
+    "customers",
+    "orders",
+    "payments",
+    "customer_subscriptions",
+    "customer_add_ons",
+    "packages",
+    "complaints",
+    "enquiries",
+    "stbs",
+    "expenses",
+    "incomes",
+}
 
 
 @app.on_event("startup")
 def startup_event():
-    # ensure auth DB exists
     init_db()
+    print("BillerQ routes: /login  /signup  /app  /admin  (open http://127.0.0.1:8001/login)")
+
 
 if STATIC_DIR.exists():
-    app.mount(
-        "/static",
-        StaticFiles(directory=str(STATIC_DIR)),
-        name="static"
-    )
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 
 class ChatRequest(BaseModel):
     message: str
 
 
-def current_user_from_request(request):
+def fetch_companies():
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT id, name FROM companies ORDER BY name")
+    companies = cur.fetchall()
+    conn.close()
+    return companies
+
+
+def company_name_by_id(company_id: int) -> str:
+    conn = get_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT name FROM companies WHERE id = %s", (company_id,))
+    row = cur.fetchone()
+    conn.close()
+    return row[0] if row else f"Company #{company_id}"
+
+
+def current_user_from_request(request: Request):
     token = request.cookies.get("session_token")
     if not token:
         return None
     return get_session(token)
 
 
+def require_user(request: Request):
+    user = current_user_from_request(request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    return user
+
+
 def apply_company_filter(sql: str, company_id: int) -> str:
-    """Naively inject company filter into simple SELECT queries for common tables."""
-    sql = sql.strip()
-    # Only handle simple SELECT ... FROM table [WHERE ...]
-    m = re.match(r"SELECT\s+(.*?)\s+FROM\s+([a-zA-Z0-9_]+)([\s\S]*)", sql, re.IGNORECASE)
+    """Inject company filter into simple SELECT queries."""
+    sql = sql.strip().rstrip(";")
+    m = re.match(
+        r"SELECT\s+(.*?)\s+FROM\s+([a-zA-Z0-9_]+)([\s\S]*)",
+        sql,
+        re.IGNORECASE,
+    )
     if not m:
-        return sql
+        return sql + ";"
 
     select_cols, table, rest = m.group(1), m.group(2), m.group(3)
+    table_lower = table.lower()
 
-    # tables that should be scoped by company_id
-    scoped = {"customers", "orders", "payments", "customer_subscriptions", "customer_add_ons", "packages"}
-    if table.lower() not in scoped:
-        return sql
-
-    # if WHERE exists, append AND company_id = X, else add WHERE company_id = X
-    if re.search(r"\bWHERE\b", rest, re.IGNORECASE):
-        rest = re.sub(r"\bWHERE\b", "WHERE", rest, flags=re.IGNORECASE)
-        new_sql = f"SELECT {select_cols} FROM {table} {rest} AND company_id = {company_id}"
+    if table_lower == "companies":
+        clause = f"id = {int(company_id)}"
+    elif table_lower in COMPANY_SCOPED_TABLES:
+        clause = f"company_id = {int(company_id)}"
     else:
-        new_sql = f"SELECT {select_cols} FROM {table} WHERE company_id = {company_id} {rest}"
+        return sql + ";"
 
-    # Ensure semicolon
-    if not new_sql.strip().endswith(";"):
-        new_sql = new_sql.strip() + ";"
+    if re.search(r"\bWHERE\b", rest, re.IGNORECASE):
+        if re.search(r"\bcompany_id\b", rest, re.IGNORECASE) or (
+            table_lower == "companies" and re.search(r"\bid\b", rest, re.IGNORECASE)
+        ):
+            return sql + ";"
+        new_sql = f"SELECT {select_cols} FROM {table} {rest} AND {clause}"
+    else:
+        new_sql = f"SELECT {select_cols} FROM {table} WHERE {clause} {rest}"
 
-    return new_sql
+    return new_sql.strip() + ";"
+
+
+def render_login(request: Request, error: str = None, message: str = None):
+    return templates.TemplateResponse(
+        "login.html",
+        {
+            "request": request,
+            "companies": fetch_companies(),
+            "error": error,
+            "message": message,
+        },
+    )
+
+
+def render_signup(request: Request, error: str = None, message: str = None):
+    return templates.TemplateResponse(
+        "signup.html",
+        {
+            "request": request,
+            "companies": fetch_companies(),
+            "is_first_user": count_users() == 0,
+            "error": error,
+            "message": message,
+        },
+    )
+
+
+def render_admin_login(request: Request, error: str = None):
+    return templates.TemplateResponse(
+        "admin_login.html",
+        {"request": request, "error": error},
+    )
 
 
 @app.get("/", response_class=HTMLResponse)
-async def home(request: Request):
-    return RedirectResponse(url="/login")
+async def root(request: Request):
+    user = current_user_from_request(request)
+    if user:
+        return RedirectResponse(url="/app", status_code=302)
+    return RedirectResponse(url="/login", status_code=302)
 
 
 @app.get("/login", response_class=HTMLResponse)
 async def login_get(request: Request):
-    # Show login form with company dropdown
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT id, name FROM companies")
-    companies = cur.fetchall()
-    conn.close()
-    return templates.TemplateResponse("login.html", {"request": request, "companies": companies})
+    if current_user_from_request(request):
+        return RedirectResponse(url="/app", status_code=302)
+    return render_login(request)
+
+
+@app.get("/admin-login", response_class=HTMLResponse)
+async def admin_login_get(request: Request):
+    # if already logged in as admin, go to admin
+    user = current_user_from_request(request)
+    if user and user.get("is_admin"):
+        return RedirectResponse(url="/admin", status_code=302)
+    return render_admin_login(request)
 
 
 @app.post("/login")
-async def login_post(request: Request, company_id: int = Form(...), email: str = Form(...), password: str = Form(...)):
+async def login_post(
+    request: Request,
+    company_id: int = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+):
+    email = email.strip().lower()
     user = get_user_by_email(email)
-    if not user:
-        return templates.TemplateResponse("login.html", {"request": request, "companies": [] , "error": "Invalid credentials"})
-    # verify password
-    from auth import verify_password
-    if not verify_password(password, user["password_hash"]):
-        return templates.TemplateResponse("login.html", {"request": request, "companies": [] , "error": "Invalid credentials"})
+    if not user or not verify_password(password, user["password_hash"]):
+        return render_login(request, error="Invalid email or password.")
+    if int(user["company_id"]) != int(company_id):
+        return render_login(request, error="Selected company does not match your account.")
     if not user["approved"]:
-        return templates.TemplateResponse("login.html", {"request": request, "companies": [] , "error": "Account pending approval"})
+        return render_login(
+            request,
+            error="Your account is pending admin approval. Please try again later.",
+        )
 
-    token = create_session(user)
-    response = RedirectResponse(url="/", status_code=302)
-    response.set_cookie("session_token", token, httponly=True)
+    name = company_name_by_id(int(company_id))
+    token = create_session(user, name)
+    response = RedirectResponse(url="/app", status_code=302)
+    response.set_cookie("session_token", token, httponly=True, samesite="lax")
+    return response
+
+
+@app.post("/admin-login")
+async def admin_login_post(request: Request, email: str = Form(...), password: str = Form(...)):
+    email = email.strip().lower()
+    user = get_user_by_email(email)
+    if not user or not verify_password(password, user["password_hash"]):
+        return render_admin_login(request, error="Invalid email or password.")
+    if not user.get("is_admin"):
+        return render_admin_login(request, error="Account is not an administrator.")
+    if not user.get("approved"):
+        return render_admin_login(request, error="Admin account pending approval.")
+
+    token = create_session(user, "")
+    response = RedirectResponse(url="/admin", status_code=302)
+    response.set_cookie("session_token", token, httponly=True, samesite="lax")
     return response
 
 
 @app.get("/signup", response_class=HTMLResponse)
 async def signup_get(request: Request):
-    conn = get_connection()
-    cur = conn.cursor()
-    cur.execute("SELECT id, name FROM companies")
-    companies = cur.fetchall()
-    conn.close()
-    return templates.TemplateResponse("signup.html", {"request": request, "companies": companies})
+    if current_user_from_request(request):
+        return RedirectResponse(url="/app", status_code=302)
+    is_first = count_users() == 0
+    return templates.TemplateResponse(
+        "signup.html",
+        {
+            "request": request,
+            "companies": fetch_companies(),
+            "is_first_user": is_first,
+            "error": None,
+            "message": None,
+        },
+    )
 
 
 @app.post("/signup")
-async def signup_post(request: Request, company_id: int = Form(...), email: str = Form(...), password: str = Form(...)):
-    # create user as pending (approved=0)
-    init_db()
-    existing = get_user_by_email(email)
-    if existing:
-        return templates.TemplateResponse("signup.html", {"request": request, "companies": [] , "error": "Email already exists"})
+async def signup_post(
+    request: Request,
+    company_id: int = Form(...),
+    email: str = Form(...),
+    password: str = Form(...),
+):
+    email = email.strip().lower()
+    is_first = count_users() == 0
 
-    # For simplicity, create user as pending
-    uid = create_user(email, password, company_id, is_admin=False, approved=False)
-    return templates.TemplateResponse("signup.html", {"request": request, "companies": [], "message": "Signup submitted — awaiting admin approval"})
+    if get_user_by_email(email):
+        return render_signup(request, error="An account with this email already exists.")
+
+    if len(password) < 6:
+        return render_signup(request, error="Password must be at least 6 characters.")
+
+    if is_first:
+        uid = create_user(
+            email, password, company_id, is_admin=True, approved=True
+        )
+        if not uid:
+            return render_signup(request, error="Could not create account. Try again.")
+        return render_signup(
+            request,
+            message="Administrator account created. You can log in now and approve other signups.",
+        )
+
+    uid = create_user(
+        email, password, company_id, is_admin=False, approved=False
+    )
+    if not uid:
+        return render_signup(request, error="Could not create account. Try again.")
+    return render_signup(
+        request,
+        message="Signup submitted. An administrator must approve your account before you can log in.",
+    )
+
+
+@app.get("/logout")
+async def logout(request: Request):
+    token = request.cookies.get("session_token")
+    if token:
+        logout_session(token)
+    response = RedirectResponse(url="/login", status_code=302)
+    response.delete_cookie("session_token")
+    return response
+
+
+@app.get("/app", response_class=HTMLResponse)
+async def app_home(request: Request):
+    user = current_user_from_request(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    return templates.TemplateResponse(
+        "index.html",
+        {"request": request, "user": user},
+    )
 
 
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_get(request: Request):
-    token = request.cookies.get("session_token")
-    user = get_session(token) if token else None
+    user = current_user_from_request(request)
     if not user or not user.get("is_admin"):
-        return RedirectResponse(url="/login")
-    users = list_pending_users()
-    return templates.TemplateResponse("admin.html", {"request": request, "users": users})
+        return RedirectResponse(url="/login", status_code=302)
+
+    pending = list_pending_users()
+    for u in pending:
+        u["company_name"] = company_name_by_id(int(u["company_id"]))
+
+    companies = fetch_companies()
+
+    return templates.TemplateResponse(
+        "admin.html",
+        {"request": request, "users": pending, "admin": user, "companies": companies},
+    )
 
 
 @app.post("/admin/approve")
 async def admin_approve(request: Request, user_id: int = Form(...)):
-    token = request.cookies.get("session_token")
-    user = get_session(token) if token else None
+    user = current_user_from_request(request)
     if not user or not user.get("is_admin"):
-        return RedirectResponse(url="/login")
+        return RedirectResponse(url="/login", status_code=302)
     approve_user(int(user_id))
-    return RedirectResponse(url="/admin")
+    return RedirectResponse(url="/admin", status_code=302)
+
+
+@app.get("/me")
+async def me(request: Request):
+    user = current_user_from_request(request)
+    if not user:
+        return {"authenticated": False}
+    return {
+        "authenticated": True,
+        "user": {
+            "id": user.get("id"),
+            "email": user.get("email"),
+            "company_id": user.get("company_id"),
+            "company_name": user.get("company_name"),
+            "is_admin": user.get("is_admin"),
+        },
+    }
 
 
 @app.post("/chat")
 async def chat(body: ChatRequest, request: Request):
-    # auth: get session from cookie
-    token = request.cookies.get("session_token")
-    user = get_session(token) if token else None
+    user = current_user_from_request(request)
+    if not user:
+        return JSONResponse(
+            {"success": False, "error": "Please log in to continue."},
+            status_code=401,
+        )
 
     user_msg = body.message.strip()
-
     if not user_msg:
-
         return JSONResponse(
-            {
-                "success": False,
-                "error": "Empty message"
-            },
-            status_code=400
+            {"success": False, "error": "Empty message"},
+            status_code=400,
         )
+
+    company_id = int(user["company_id"])
 
     try:
-
-        # AI → SQL
-        ai_result = natural_language_to_sql(
-            user_msg
-        )
-
-        sql = ai_result["sql"]
-
+        ai_result = natural_language_to_sql(user_msg)
+        sql = apply_company_filter(ai_result["sql"], company_id)
         explanation = ai_result["explanation"]
 
-        # Apply company scoping if user is logged in
-        if user and user.get("company_id"):
-            try:
-                sql = apply_company_filter(sql, int(user.get("company_id")))
-            except Exception:
-                pass
-
         db_result = run_query(sql)
-        
-        # SKIP EXPENSIVE RETRY - only retry if result is empty and user asked for specific data
-        if db_result["row_count"] == 0 and any(word in user_msg.lower() for word in ["show", "get", "find", "list"]):
 
+        if db_result["row_count"] == 0 and any(
+            word in user_msg.lower()
+            for word in ["show", "get", "find", "list"]
+        ):
             retry_prompt = f"""
             The SQL returned 0 rows.
 
@@ -217,32 +383,20 @@ async def chat(body: ChatRequest, request: Request):
 
             Try again using similar database values.
             """
-
-            retry_ai = natural_language_to_sql(
-                retry_prompt
-            )
-
-            retry_sql = retry_ai["sql"]
-
+            retry_ai = natural_language_to_sql(retry_prompt)
+            retry_sql = apply_company_filter(retry_ai["sql"], company_id)
             retry_result = run_query(retry_sql)
-
             if retry_result["row_count"] > 0:
-
                 sql = retry_sql
                 db_result = retry_result
 
         columns = db_result["columns"]
-
         rows = db_result["rows"]
-
         row_count = db_result["row_count"]
 
-        # SKIP expensive AI summary - generate simple summary instead
         if row_count > 0:
-            summary = f"Found {row_count} record(s) matching your query."
+            summary = f"Found {row_count} record(s) for your company."
             insights = []
-            
-            # Quick heuristics for insights
             if "customer" in user_msg.lower() and row_count > 1:
                 insights.append(f"{row_count} customers retrieved")
             elif "payment" in user_msg.lower() and row_count > 1:
@@ -252,123 +406,72 @@ async def chat(body: ChatRequest, request: Request):
             insights = []
 
         return {
-
             "success": True,
-
             "sql": sql,
-
             "explanation": explanation,
-
             "summary": summary,
-
             "insights": insights,
-
             "columns": columns,
-
             "rows": rows,
-
-            "row_count": row_count
+            "row_count": row_count,
         }
 
     except Exception as e:
-
         return JSONResponse(
-            {
-                "success": False,
-                "error": str(e)
-            },
-            status_code=500
+            {"success": False, "error": str(e)},
+            status_code=500,
         )
 
 
 @app.post("/analyze")
-async def analyze(body: ChatRequest):
-    """Generate AI analysis for previously fetched results"""
+async def analyze(body: ChatRequest, request: Request):
+    require_user(request)
     try:
-        from ai import generate_full_response
-        
         user_msg = body.message.strip()
-        
         if not user_msg:
             return JSONResponse(
-                {
-                    "success": False,
-                    "error": "Empty message"
-                },
-                status_code=400
+                {"success": False, "error": "Empty message"},
+                status_code=400,
             )
-        
-        # This endpoint is for getting AI-powered analysis
-        # Client would pass raw results to analyze
         return {
             "success": True,
-            "message": "Use /chat endpoint for complete analysis"
+            "message": "Use /chat endpoint for complete analysis",
         }
-    
     except Exception as e:
         return JSONResponse(
-            {
-                "success": False,
-                "error": str(e)
-            },
-            status_code=500
+            {"success": False, "error": str(e)},
+            status_code=500,
         )
 
 
 @app.post("/cache/clear")
-async def clear_cache():
-    """Clear database schema and context caches"""
+async def clear_cache(request: Request):
+    require_user(request)
     try:
         database._SCHEMA_CACHE = None
         database._SCHEMA_CACHE_TIME = 0
         database._BUSINESS_CONTEXT_CACHE = None
         database._BUSINESS_CONTEXT_CACHE_TIME = 0
-        
-        return {
-            "success": True,
-            "message": "Cache cleared successfully"
-        }
+        return {"success": True, "message": "Cache cleared successfully"}
     except Exception as e:
         return JSONResponse(
-            {
-                "success": False,
-                "error": str(e)
-            },
-            status_code=500
+            {"success": False, "error": str(e)},
+            status_code=500,
         )
 
 
 @app.get("/health")
 async def health():
-
     try:
-
         conn = get_connection()
-
         conn.close()
-
         return {
             "status": "ok",
             "database": "connected",
-            "model": "qwen2.5:7b "
+            "model": "qwen2.5:7b ",
         }
-
     except Exception as e:
-
         return JSONResponse(
-            {
-                "status": "error",
-                "detail": str(e)
-            },
-            status_code=500
+            {"status": "error", "detail": str(e)},
+            status_code=500,
         )
-
-
-    @app.get("/me")
-    async def me(request: Request):
-        """Return authentication status for the current visitor (uses session cookie)."""
-        token = request.cookies.get("session_token")
-        user = get_session(token) if token else None
-        if not user:
-            return {"authenticated": False}
-        return {"authenticated": True, "user": {"id": user.get("id"), "email": user.get("email"), "company_id": user.get("company_id"), "is_admin": user.get("is_admin")}}

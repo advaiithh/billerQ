@@ -57,12 +57,22 @@
     #send-btn { background: #1d9e75; color: #fff; border: none; border-radius: 10px; padding: 10px 22px; font-size: 14px; font-family: inherit; cursor: pointer; }
     #send-btn:hover { background: #17856a; }
     #send-btn:disabled { background: #21262d; color: #7d8590; cursor: not-allowed; }
+    .user-bar { margin-left: auto; display: flex; align-items: center; gap: 14px; font-size: 12px; }
+    .user-bar .company { color: #3fb950; font-weight: 600; }
+    .user-bar a { color: #58a6ff; text-decoration: none; }
+    .user-bar a:hover { text-decoration: underline; }
   </style>
 </head>
 <body>
 <header>
   <div class="logo">BQ</div>
   <div><h1>BillerQ AI Assistant</h1><p>Qwen 2.5 7B · Ollama · MySQL · FastAPI</p></div>
+  <div class="user-bar">
+    <span class="company">{{ user.company_name or ('Company #' ~ user.company_id) }}</span>
+    <span style="color:#7d8590;">{{ user.email }}</span>
+    {% if user.is_admin %}<a href="/admin">Approvals</a>{% endif %}
+    <a href="/logout">Log out</a>
+  </div>
   <div class="status"><div class="dot"></div> Live</div>
 </header>
 <div id="chat"></div>
@@ -79,15 +89,13 @@
   <button id="send-btn" onclick="send()">&#9658; Send</button>
 </div>
 <script>
-  // Redirect unauthenticated visitors to /login immediately
   (async function checkAuth(){
     try{
       const r = await fetch('/me');
-      if(r.ok){
-        const j = await r.json();
-        if(!j.authenticated){ window.location.href = '/login'; }
-      }
-    }catch(e){ /* network errors: allow page to load and show friendly message */ }
+      if(!r.ok){ window.location.href='/login'; return; }
+      const j = await r.json();
+      if(!j.authenticated){ window.location.href='/login'; }
+    }catch(e){ window.location.href='/login'; }
   })();
   const chat=document.getElementById('chat'),inp=document.getElementById('inp'),btn=document.getElementById('send-btn');
   const SW=['active','inactive','paid','pending','overdue','failed','cancelled','completed','premium','standard'];
@@ -109,12 +117,18 @@
   async function send(){
     const msg=inp.value.trim();if(!msg)return;
     inp.value='';btn.disabled=true;userMsg(msg);typing();
-    try{const r=await fetch('/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg})});const d=await r.json();rmTyping();botMsg(d);}
+    try{
+      const r=await fetch('/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({message:msg})});
+      const d=await r.json();
+      rmTyping();
+      if(r.status===401){ window.location.href='/login'; return; }
+      botMsg(d);
+    }
     catch(e){rmTyping();botMsg({success:false,error:'Network error — is the server running?'});}
     finally{btn.disabled=false;inp.focus();}
   }
   function sendChip(el){inp.value=el.textContent;send();}
-  window.addEventListener('load',()=>{const e=document.createElement('div');e.className='msg bot';e.innerHTML='<div class="msg-label">billerq ai</div><div class="bubble">&#128075; Hello! I\'m the <strong>BillerQ AI Assistant</strong> powered by <strong>Qwen 2.5 7B</strong>.<br><br>Ask me anything about your business data in plain English. I\'ll generate the SQL, run it on MySQL, and explain the results.</div>';chat.appendChild(e);});
+  window.addEventListener('load',()=>{const e=document.createElement('div');e.className='msg bot';e.innerHTML='<div class="msg-label">billerq ai</div><div class="bubble">&#128075; Hello! Ask about <strong>your company\'s</strong> customers, subscriptions, payments, and invoices in plain English. Results are limited to your selected company only.</div>';chat.appendChild(e);});
 </script>
 </body>
 </html>

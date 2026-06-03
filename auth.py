@@ -73,11 +73,23 @@ def get_user_by_email(email: str) -> Optional[Dict]:
     return dict(row) if row else None
 
 
+def count_users() -> int:
+    init_db()
+    conn = _get_conn()
+    cur = conn.cursor()
+    cur.execute("SELECT COUNT(*) FROM users")
+    n = cur.fetchone()[0]
+    conn.close()
+    return n
+
+
 def list_pending_users():
     init_db()
     conn = _get_conn()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM users WHERE approved = 0")
+    cur.execute(
+        "SELECT * FROM users WHERE approved = 0 AND is_admin = 0 ORDER BY id"
+    )
     rows = [dict(r) for r in cur.fetchall()]
     conn.close()
     return rows
@@ -95,9 +107,15 @@ def approve_user(user_id: int):
 SESSIONS = {}
 
 
-def create_session(user: Dict) -> str:
+def create_session(user: Dict, company_name: str = "") -> str:
     token = secrets.token_urlsafe(32)
-    SESSIONS[token] = {"id": user["id"], "email": user["email"], "company_id": user["company_id"], "is_admin": bool(user["is_admin"])}
+    SESSIONS[token] = {
+        "id": user["id"],
+        "email": user["email"],
+        "company_id": user["company_id"],
+        "company_name": company_name,
+        "is_admin": bool(user["is_admin"]),
+    }
     return token
 
 
