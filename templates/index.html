@@ -43,6 +43,13 @@
     .section-label { font-size: 10px; color: #7d8590; text-transform: uppercase; letter-spacing: .8px; margin-bottom: 5px; }
     .sql-block { background: #0d1117; border: 1px solid #30363d; border-radius: 8px; padding: 10px 14px; font-family: Consolas,monospace; font-size: 12px; color: #58a6ff; white-space: pre-wrap; word-break: break-all; margin-bottom: 12px; }
     .summary-box { background: #1a2a1e; border: 1px solid #1d9e75; border-radius: 8px; padding: 10px 14px; font-size: 13px; color: #adbac7; margin-bottom: 10px; line-height: 1.6; }
+    .narrative-box { background: #1a2430; border: 1px solid #58a6ff; border-radius: 10px; padding: 14px 16px; margin-top: 12px; margin-bottom: 10px; font-size: 14px; line-height: 1.65; color: #c9d1d9; }
+    .narrative-box strong { color: #e6edf3; }
+    .blocked-box { background: #2d2208; border: 1px solid #d29922; border-radius: 10px; padding: 14px 16px; font-size: 14px; line-height: 1.6; color: #e3b341; margin-bottom: 10px; }
+    .chat-box { background: #1a2a1e; border: 1px solid #1d9e75; border-radius: 10px; padding: 14px 16px; font-size: 14px; line-height: 1.65; color: #adbac7; margin-bottom: 10px; }
+    .chat-box strong { color: #3fb950; }
+    .intent-tag { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .5px; padding: 3px 8px; border-radius: 4px; margin-bottom: 8px; background: #3d2b0f; color: #d29922; }
+    .intent-tag.chat { background: #1a3d2b; color: #3fb950; }
     .insights-box { background: #1a1f2e; border: 1px solid #388bfd; border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; }
     .insights-box .ins-title { font-size: 11px; color: #58a6ff; text-transform: uppercase; letter-spacing: .7px; margin-bottom: 7px; }
     .insight-item { font-size: 13px; color: #adbac7; margin-bottom: 5px; line-height: 1.5; padding-left: 4px; }
@@ -125,7 +132,9 @@
   function badge(v){const s=String(v).toLowerCase();if(['active','paid','completed'].includes(s))return'b-active';if(['pending','inactive'].includes(s))return'b-pending';if(['overdue','failed','cancelled','terminated','expired','suspended'].includes(s))return'b-overdue';if(s==='premium')return'b-premium';if(s==='standard')return'b-standard';return'';}
   function cell(v){const s=String(v);if(SW.includes(s.toLowerCase())){const c=badge(s);return c?`<span class="badge ${c}">${esc(s)}</span>`:esc(s);}return esc(s);}
   function tbl(cols,rows){let h='<div class="table-wrap"><table><thead><tr>';cols.forEach(c=>h+=`<th>${esc(c)}</th>`);h+='</tr></thead><tbody>';rows.forEach(r=>{h+='<tr>';r.forEach(v=>h+=`<td>${cell(v)}</td>`);h+='</tr>';});return h+'</tbody></table></div>';}
-  function ins(list){if(!list||!list.length)return'';let h='<div class="insights-box"><div class="ins-title">&#128200; Smart Insights</div>';list.forEach(i=>h+=`<div class="insight-item">&#128161; ${esc(i)}</div>`);return h+'</div>';}
+  function md(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');}
+  function narrativeBox(text){if(!text)return'';return`<div class="section-label">In plain English</div><div class="narrative-box">${md(text)}</div>`;}
+  function ins(list){if(!list||!list.length)return'';let h='<div class="insights-box"><div class="ins-title">&#128200; Key points</div>';list.forEach(i=>h+=`<div class="insight-item">&#128161; ${esc(i)}</div>`);return h+'</div>';}
   function userMsg(t){const e=document.createElement('div');e.className='msg user';e.innerHTML=`<div class="msg-label">you</div><div class="bubble">${esc(t)}</div>`;chat.appendChild(e);chat.scrollTop=chat.scrollHeight;}
   function typing(){const e=document.createElement('div');e.className='msg bot';e.id='typ';e.innerHTML='<div class="msg-label">billerq ai</div><div class="typing"><span></span><span></span><span></span></div>';chat.appendChild(e);chat.scrollTop=chat.scrollHeight;}
   function rmTyping(){document.getElementById('typ')?.remove();}
@@ -134,9 +143,15 @@
     if(!d.success){
       if(d.error&&d.error.includes('log in')){window.location.href='/';}
       e.innerHTML=`<div class="msg-label">billerq ai</div><div class="bubble"><div class="error-box">&#9888; ${esc(d.error)}</div></div>`;
+    }else if(d.blocked){
+      const isChat=d.conversational||d.intent==='OTHER';
+      const tag=isChat?'<span class="intent-tag chat">Message</span>':(d.intent?`<span class="intent-tag">${esc(d.intent)} — not allowed</span>`:'');
+      const box=isChat?`<div class="chat-box">${md(d.narrative||d.summary||'')}</div>`:`<div class="blocked-box">${md(d.narrative||d.summary||'This action is not supported.')}</div>`;
+      e.innerHTML=`<div class="msg-label">billerq ai</div><div class="bubble">${tag}${box}${d.explanation&&!isChat?`<div style="font-size:12px;color:#7d8590;margin-top:8px;">&#128196; ${esc(d.explanation)}</div>`:''}</div>`;
     }else{
       const t=d.rows&&d.rows.length?tbl(d.columns,d.rows):'<p style="color:#7d8590;margin-top:8px;">No records found.</p>';
-      e.innerHTML=`<div class="msg-label">billerq ai</div><div class="bubble">${d.summary?`<div class="section-label">Summary</div><div class="summary-box">&#128203; ${esc(d.summary)}</div>`:''}<div class="section-label">Generated SQL</div><div class="sql-block">${esc(d.sql)}</div><div class="section-label">Results</div>${t}<div class="row-count" style="margin-bottom:10px;">${d.row_count} row(s) returned</div>${ins(d.insights)}${d.explanation?`<div style="font-size:12px;color:#7d8590;margin-top:6px;">&#128196; ${esc(d.explanation)}</div>`:''}</div>`;
+      const sqlBlock=d.sql?`<div class="section-label">Generated SQL</div><div class="sql-block">${esc(d.sql)}</div>`:'';
+      e.innerHTML=`<div class="msg-label">billerq ai</div><div class="bubble">${d.summary?`<div class="section-label">Summary</div><div class="summary-box">&#128203; ${esc(d.summary)}</div>`:''}${sqlBlock}<div class="section-label">Results</div>${t}<div class="row-count" style="margin-bottom:4px;">${d.row_count} row(s) returned</div>${narrativeBox(d.narrative)}${ins(d.insights)}${d.explanation?`<div style="font-size:12px;color:#7d8590;margin-top:6px;">&#128196; ${esc(d.explanation)}</div>`:''}</div>`;
     }
     chat.appendChild(e);chat.scrollTop=chat.scrollHeight;
   }

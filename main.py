@@ -5,7 +5,8 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from ai import natural_language_to_sql
+from ai import natural_language_to_sql, CHIP_PHRASES
+from summaries import build_narrative
 from config import OLLAMA_MODEL
 
 import database
@@ -248,56 +249,84 @@ async def chat(body: ChatRequest, request: Request):
 
     try:
         ai_result = natural_language_to_sql(user_msg, company_id=company_id)
+
+        if ai_result.get("blocked"):
+            return {
+                "success": True,
+                "blocked": True,
+                "conversational": ai_result.get("conversational", False),
+                "intent": ai_result.get("intent"),
+                "sql": None,
+                "explanation": ai_result.get("explanation", ""),
+                "summary": ai_result.get("message", ""),
+                "narrative": ai_result.get("message", ""),
+                "insights": [],
+                "columns": [],
+                "rows": [],
+                "row_count": 0,
+                "company": scope_label,
+                "is_admin": is_admin,
+            }
+
         sql = ai_result["sql"]
         explanation = ai_result["explanation"]
         method = ai_result.get("method", "rules")
+        table = ai_result.get("table", "customers")
 
         db_result = run_query(sql)
 
+        # Retry with AI only for non-chip list queries that returned nothing
+        q_lower = user_msg.lower().strip()
         if (
             db_result["row_count"] == 0
-            and method == "rules"
-            and any(w in user_msg.lower() for w in ["show", "get", "find", "list"])
+            and method in ("rules", "rules-fallback")
+            and q_lower not in CHIP_PHRASES
+            and any(w in q_lower for w in ["show", "get", "find", "list"])
         ):
             retry_ai = natural_language_to_sql(
                 f"{user_msg} (include all matching statuses, use correct column names)",
                 company_id=company_id,
             )
-            retry_sql = retry_ai["sql"]
-            if retry_sql != sql:
-                retry_result = run_query(retry_sql)
+            if not retry_ai.get("blocked") and retry_ai.get("sql") and retry_ai["sql"] != sql:
+                retry_result = run_query(retry_ai["sql"])
                 if retry_result["row_count"] > 0:
-                    sql = retry_sql
+                    sql = retry_ai["sql"]
                     db_result = retry_result
                     explanation = retry_ai["explanation"]
+                    table = retry_ai.get("table", table)
 
         row_count = db_result["row_count"]
+        narrative, extra_insights = build_narrative(
+            user_msg,
+            company_id,
+            scope_label,
+            table,
+            db_result["columns"],
+            db_result["rows"],
+            row_count,
+        )
 
-        if row_count > 0:
-            summary = f"Found {row_count} record(s) for {scope_label}."
-            insights = []
-            q = user_msg.lower()
-            if "customer" in q and row_count > 1:
-                insights.append(f"{row_count} customer records for {scope_label}")
-            elif "payment" in q and row_count > 1:
-                insights.append(f"{row_count} payment records for {scope_label}")
-            elif ("order" in q or "invoice" in q) and row_count > 1:
-                insights.append(f"{row_count} invoice/order records for {scope_label}")
-        else:
-            summary = f"No records found for {scope_label} matching your query."
-            insights = []
+        summary = (
+            f"Found {row_count} record(s) for {scope_label}."
+            if row_count
+            else f"No records found for {scope_label}."
+        )
 
         return {
             "success": True,
+            "blocked": False,
+            "intent": "SELECT",
             "sql": sql,
             "explanation": explanation,
             "summary": summary,
-            "insights": insights,
+            "narrative": narrative,
+            "insights": extra_insights,
             "columns": db_result["columns"],
             "rows": db_result["rows"],
             "row_count": row_count,
             "company": scope_label,
             "is_admin": is_admin,
+            "method": method,
         }
 
     except Exception as e:

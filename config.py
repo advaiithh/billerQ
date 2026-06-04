@@ -12,6 +12,7 @@ DB_NAME     = "u167254999_BqCustomerAi"
 # Ollama
 OLLAMA_URL   = "http://localhost:11434/api/generate"
 OLLAMA_MODEL = "qwen2.5:7b"
+OLLAMA_TIMEOUT_SEC = 15
 
 # Auth — change these in production
 SECRET_KEY       = "billerq-change-this-secret-in-production-2026"
