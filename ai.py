@@ -248,12 +248,13 @@ def _build_sql_from_query(user_query: str, table: str) -> str:
     # INACTIVE — must be checked BEFORE active (inactive contains "active")
     if _has_word(user_lower, "inactive") or _has_word(user_lower, "disabled"):
         if table == "customers":
-            return with_base([f"{status_col} = 'inactive'"])
+            # Include ALL non-active statuses: inactive, suspended, archive, blocked, etc.
+            return with_base([f"{status_col} != 'active'"])
         if table == "customer_subscriptions":
-            return with_base([f"{status_col} IN ('inactive', 'terminated', 'expired')"])
+            return with_base([f"{status_col} IN ('inactive', 'terminated', 'expired', 'pending')"])
         if table == "companies":
-            return with_base([f"{status_col} = 'inactive'"])
-        return with_base([f"{status_col} = 'inactive'"])
+            return with_base([f"{status_col} != 'active'"])
+        return with_base([f"{status_col} != 'active'"])
 
     # OVERDUE invoices
     if _has_word(user_lower, "overdue") and table == "orders":
@@ -274,7 +275,11 @@ def _build_sql_from_query(user_query: str, table: str) -> str:
         return with_base(order_by=f"{date_col} DESC")
 
     # STATUS: active, pending, unpaid, paid, terminated, expired, suspended
-    if _has_word(user_lower, "active"):
+    # NOTE: "active" filter is ONLY applied when user explicitly asks for active,
+    # NOT when they say "show all" — that should return everything.
+    if _has_word(user_lower, "active") and not any(
+        phrase in user_lower for phrase in ("show all", "all customers", "all subscribers")
+    ):
         return with_base([f"{status_col} = 'active'"])
 
     if _has_word(user_lower, "terminated"):

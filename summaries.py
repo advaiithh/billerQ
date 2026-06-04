@@ -66,21 +66,30 @@ def fetch_table_stats(company_id: int | None, table: str) -> dict:
     stats = {}
 
     try:
-        if table == "customers" and table_has_column(table, "status"):
-            sql = f"""
-                SELECT
-                    COUNT(*) AS total,
-                    SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) AS active,
-                    SUM(CASE WHEN status = 'inactive' THEN 1 ELSE 0 END) AS inactive,
-                    SUM(CASE WHEN status = 'suspended' THEN 1 ELSE 0 END) AS suspended
+        if table == "customers":
+            # Get total + breakdown of ALL status values dynamically
+            sql_total = f"SELECT COUNT(*) FROM customers WHERE 1=1{dc}{cw}"
+            r = run_query(sql_total)
+            stats["total"] = r["rows"][0][0] if r["rows"] else 0
+
+            # Get per-status counts for ALL statuses that exist
+            sql_status = f"""
+                SELECT status, COUNT(*) as cnt
                 FROM customers
                 WHERE 1=1{dc}{cw}
+                GROUP BY status
+                ORDER BY cnt DESC
             """
-            r = run_query(sql)
-            if r["rows"]:
-                row = r["rows"][0]
-                cols = r["columns"]
-                stats = {cols[i]: row[i] for i in range(len(cols))}
+            r2 = run_query(sql_status)
+            status_breakdown = {}
+            for row in r2["rows"]:
+                status_val = str(row[0]).lower() if row[0] else "unknown"
+                status_breakdown[status_val] = int(row[1])
+            stats["status_breakdown"] = status_breakdown
+            # Keep legacy keys for backward compat
+            stats["active"] = status_breakdown.get("active", 0)
+            stats["inactive"] = status_breakdown.get("inactive", 0)
+            stats["suspended"] = status_breakdown.get("suspended", 0)
 
         elif table == "orders" and table_has_column(table, "payment_status"):
             amt = "order_total" if table_has_column(table, "order_total") else "amount"
@@ -111,18 +120,22 @@ def fetch_table_stats(company_id: int | None, table: str) -> dict:
 
         elif table == "customer_subscriptions" and table_has_column(table, "status"):
             sql = f"""
-                SELECT
-                    COUNT(*) AS total,
-                    SUM(CASE WHEN status = 'active' THEN 1 ELSE 0 END) AS active,
-                    SUM(CASE WHEN status IN ('inactive','terminated','expired') THEN 1 ELSE 0 END) AS inactive
+                SELECT status, COUNT(*) as cnt
                 FROM customer_subscriptions
                 WHERE 1=1{dc}{cw}
+                GROUP BY status
             """
             r = run_query(sql)
-            if r["rows"]:
-                row = r["rows"][0]
-                cols = r["columns"]
-                stats = {cols[i]: row[i] for i in range(len(cols))}
+            breakdown = {}
+            total = 0
+            for row in r["rows"]:
+                sv = str(row[0]).lower() if row[0] else "unknown"
+                breakdown[sv] = int(row[1])
+                total += int(row[1])
+            stats["status_breakdown"] = breakdown
+            stats["total"] = total
+            stats["active"] = breakdown.get("active", 0)
+            stats["inactive"] = sum(v for k, v in breakdown.items() if k != "active")
 
         elif table == "payments":
             amt = "amount" if table_has_column(table, "amount") else "id"
@@ -178,45 +191,48 @@ def build_narrative(
 
     # --- Customers ---
     if table == "customers":
-        status_counts = _count_by_column(columns, rows, "status")
         shown = row_count
         total = int(stats.get("total") or 0)
         active = int(stats.get("active") or 0)
-        inactive = int(stats.get("inactive") or 0)
-        suspended = int(stats.get("suspended") or 0)
+        status_breakdown = stats.get("status_breakdown", {})
+
+        # Build a human-readable breakdown of ALL status values
+        def _breakdown_str(bd: dict) -> str:
+            if not bd:
+                return ""
+            parts = [f"**{v} {k}**" for k, v in sorted(bd.items(), key=lambda x: -x[1])]
+            return ", ".join(parts)
 
         if "inactive" in q:
-            narrative = (
-                f"**{shown} inactive customer(s)** shown for {scope}. "
-            )
-            if total:
-                narrative += (
-                    f"Out of **{total} total customers**, "
-                    f"**{active} are active**, **{inactive} inactive**"
-                    + (f", and **{suspended} suspended**." if suspended else ".")
-                )
-            insights.append(f"Inactive in this list: {shown}")
-            if total:
-                pct = round(100 * inactive / total, 1) if total else 0
-                insights.append(f"{pct}% of all customers are inactive")
+            narrative = f"**{shown} non-active customer(s)** shown for {scope}. "
+            if total and status_breakdown:
+                bd_str = _breakdown_str(status_breakdown)
+                narrative += f"Out of **{total} total customers**: {bd_str}."
+            elif total:
+                inactive_count = total - active
+                narrative += f"Out of **{total} total customers**, **{active} active** and **{inactive_count} non-active**."
+
         elif "active" in q and "inactive" not in q:
             narrative = f"**{shown} active customer(s)** in this view for {scope}. "
-            if total:
-                narrative += (
-                    f"Company-wide: **{total} customers** — "
-                    f"**{active} active**, **{inactive} inactive**."
-                )
+            if total and status_breakdown:
+                bd_str = _breakdown_str(status_breakdown)
+                narrative += f"Company-wide breakdown: {bd_str}."
+            elif total:
+                narrative += f"Company-wide: **{total} total customers**."
+
         else:
             narrative = f"**{shown} customer record(s)** for {scope}. "
-            if total:
-                narrative += (
-                    f"In total you have **{total} customers**: "
-                    f"**{active} active**, **{inactive} inactive**"
-                    + (f", **{suspended} suspended**." if suspended else ".")
-                )
-            elif status_counts:
-                parts = [f"{k}: {v}" for k, v in sorted(status_counts.items())]
-                narrative += "Breakdown in this table: " + ", ".join(parts) + "."
+            if total and status_breakdown:
+                bd_str = _breakdown_str(status_breakdown)
+                narrative += f"Full company breakdown: {bd_str}."
+            elif total:
+                narrative += f"Total customers on record: **{total}**."
+
+        # Always add insights for any non-standard statuses found
+        if status_breakdown:
+            for sv, cnt in status_breakdown.items():
+                if sv not in ("active", "inactive") and cnt > 0:
+                    insights.append(f"{cnt} customer(s) with status '{sv}'")
 
         return narrative, insights
 
