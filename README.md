@@ -713,6 +713,69 @@ If Ollama is stopped: app still runs; complex questions fall back to basic rules
 
 ---
 
+## LLM provider — Ollama or Amazon Bedrock
+
+All LLM calls (intent classification + SQL generation) go through a single
+provider-agnostic helper, `llm_client.generate()`. The backend is selected at
+runtime, so the rest of the codebase never changes when you switch models.
+
+```
+config.LLM_PROVIDER = "ollama"   # local Qwen via Ollama (default)
+config.LLM_PROVIDER = "bedrock"  # Amazon Bedrock (recommended for production)
+```
+
+Set it with the `BILLERQ_LLM_PROVIDER` environment variable.
+
+### Tiered models (cost control)
+
+`generate()` takes a `tier` so cheap work doesn't pay for an expensive model:
+
+| Tier | Used for | Default Bedrock model |
+|------|----------|------------------------|
+| `fast` | intent / entity / summary (every prompt) | Claude 3.5 Haiku |
+| `smart` | SQL generation, reports, insights | Claude 3.5 Sonnet |
+
+The cheapest alternative is **Amazon Nova Lite/Micro** for the `fast` tier.
+Embeddings (future semantic search): **Amazon Titan Text Embeddings V2**.
+
+### Bedrock configuration (env vars)
+
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `BILLERQ_LLM_PROVIDER` | `ollama` | `ollama` or `bedrock` |
+| `AWS_REGION` | `us-east-1` | Region where Bedrock models are enabled |
+| `BEDROCK_MODEL_FAST` | `us.anthropic.claude-3-5-haiku-20241022-v1:0` | fast-tier model id |
+| `BEDROCK_MODEL_SMART` | `us.anthropic.claude-3-5-sonnet-20241022-v2:0` | smart-tier model id |
+| `BEDROCK_TIMEOUT_SEC` | `30` | per-call read timeout |
+
+> Confirm the exact model IDs enabled in **your** region under
+> Bedrock → Model access. Many Claude models require a cross-region
+> **inference profile** id (the `us.` / `eu.` / `apac.` prefix).
+
+### AWS credentials
+
+`boto3` resolves credentials automatically — **never hardcode AWS keys**:
+
+- On AWS (EC2/ECS/Lambda): attach an **IAM role** with `bedrock:InvokeModel`
+  and `bedrock:Converse` permissions.
+- Locally: `aws configure` or export `AWS_ACCESS_KEY_ID` /
+  `AWS_SECRET_ACCESS_KEY` / `AWS_REGION`.
+
+### Switch to Bedrock (quick start)
+
+```bash
+pip install -r requirements.txt          # installs boto3
+export AWS_REGION=us-east-1               # your region
+export BILLERQ_LLM_PROVIDER=bedrock
+# (ensure AWS credentials are available to boto3)
+```
+
+Token usage is logged per Bedrock call (logger `billerq.llm`) so you can track
+cost. If a Bedrock call fails, the app degrades gracefully to the rules engine,
+exactly like the Ollama fallback.
+
+---
+
 ## Setup (local)
 
 ### Requirements
