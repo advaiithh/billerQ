@@ -1,8 +1,6 @@
 import re
-import json
-import requests
+import llm_client
 from memory import memory
-from config import OLLAMA_MODEL, OLLAMA_URL, OLLAMA_TIMEOUT_SEC
 from database import (
     get_table_schema,
     get_business_context,
@@ -459,8 +457,8 @@ def _classify_intent_rules(user_query: str) -> str:
     return "OTHER"
 
 
-def _try_ollama_intent(user_query: str) -> str | None:
-    """Ask Qwen to classify intent before generating SQL."""
+def _llm_classify_intent(user_query: str) -> str | None:
+    """Ask the LLM (fast tier) to classify intent before generating SQL."""
     prompt = f"""You classify user messages for a read-only billing database chatbot.
 
 Reply with ONLY one word — no punctuation, no explanation:
@@ -483,27 +481,16 @@ User message:
 
 Intent:"""
 
-    try:
-        response = requests.post(
-            OLLAMA_URL,
-            json={
-                "model": OLLAMA_MODEL,
-                "prompt": prompt,
-                "stream": False,
-                "options": {"temperature": 0, "num_predict": 16},
-            },
-            timeout=OLLAMA_TIMEOUT_SEC,
-        )
-        response.raise_for_status()
-        text = response.json().get("response", "").strip().upper()
-        for intent in ("SELECT", "INSERT", "UPDATE", "DELETE", "DDL", "OTHER"):
-            if intent in text.split():
-                return intent
-        if text.startswith("SELECT"):
-            return "SELECT"
+    text = llm_client.generate(prompt, tier=llm_client.FAST, max_tokens=16, temperature=0.0)
+    if not text:
         return None
-    except Exception:
-        return None
+    text = text.strip().upper()
+    for intent in ("SELECT", "INSERT", "UPDATE", "DELETE", "DDL", "OTHER"):
+        if intent in text.split():
+            return intent
+    if text.startswith("SELECT"):
+        return "SELECT"
+    return None
 
 
 def classify_intent(user_query: str) -> dict:
@@ -530,7 +517,7 @@ def classify_intent(user_query: str) -> dict:
     )
 
     if use_ai:
-        ai_intent = _try_ollama_intent(user_query)
+        ai_intent = _llm_classify_intent(user_query)
         if ai_intent:
             return {
                 "intent": ai_intent,
@@ -565,7 +552,7 @@ def _extract_sql_from_llm_response(text: str) -> str:
     return text
 
 
-def _try_ollama_sql(user_query: str, company_id: int, table: str) -> str | None:
+def _llm_generate_sql(user_query: str, company_id: int, table: str) -> str | None:
     try:
         schema = get_table_schema()
         context = get_business_context()
@@ -612,18 +599,9 @@ Likely primary table: {table}
 
 Return ONLY the SQL query:"""
 
-        response = requests.post(
-            OLLAMA_URL,
-            json={
-                "model": OLLAMA_MODEL,
-                "prompt": prompt,
-                "stream": False,
-                "options": {"temperature": 0.1, "num_predict": 512},
-            },
-            timeout=OLLAMA_TIMEOUT_SEC,
+        result = llm_client.generate(
+            prompt, tier=llm_client.SMART, max_tokens=512, temperature=0.1
         )
-        response.raise_for_status()
-        result = response.json().get("response", "").strip()
         if not result:
             return None
 
@@ -694,7 +672,7 @@ def natural_language_to_sql(user_query: str, company_id: int = None) -> dict:
         sql = _build_sql_from_query(user_query, table)
         method = "rules"
     else:
-        sql = _try_ollama_sql(user_query, company_id, table)
+        sql = _llm_generate_sql(user_query, company_id, table)
         method = "ai"
         if not sql:
             if _classify_intent_rules(user_query) != "SELECT":
