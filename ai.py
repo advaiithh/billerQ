@@ -3,6 +3,7 @@ import json
 import requests
 from memory import memory
 from config import OLLAMA_MODEL, OLLAMA_URL, OLLAMA_TIMEOUT_SEC
+from smart_search import is_search_query, smart_search_sql
 from database import (
     get_table_schema,
     get_business_context,
@@ -689,6 +690,22 @@ def natural_language_to_sql(user_query: str, company_id: int = None) -> dict:
         }
 
     table = _find_best_table(user_query)
+
+    if is_search_query(user_query):
+        sql = smart_search_sql(user_query, company_id=company_id)
+        if sql:
+            try:
+                memory.save_context({"input": user_query}, {"output": sql})
+            except Exception:
+                pass
+            return {
+                "blocked": False,
+                "intent": "SELECT",
+                "sql": sql.strip(),
+                "explanation": "Understood as a structured business search with entity extraction and joins.",
+                "table": table,
+                "method": "smart-search",
+            }
 
     if _use_rules_only(user_query):
         sql = _build_sql_from_query(user_query, table)

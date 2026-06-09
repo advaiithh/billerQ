@@ -33,15 +33,22 @@ _COMPANIES_LIST_CACHE_TIME = 0
 
 def get_connection():
     """Get database connection - simpler approach without pooling"""
-    return mysql.connector.connect(
-        host=DB_HOST,
-        port=DB_PORT,
-        user=DB_USER,
-        password=DB_PASSWORD,
-        database=DB_NAME,
-        connection_timeout=10,
-        autocommit=True
-    )
+    config = {
+        "host": DB_HOST,
+        "port": DB_PORT,
+        "user": DB_USER,
+        "password": DB_PASSWORD,
+        "database": DB_NAME,
+        "connection_timeout": 4,
+        "autocommit": True,
+    }
+
+    try:
+        return mysql.connector.connect(**config)
+    except TypeError:
+        # Older mysql-connector versions may not accept connection_timeout
+        config.pop("connection_timeout", None)
+        return mysql.connector.connect(**config)
 
 
 # ---------------------------------------------------

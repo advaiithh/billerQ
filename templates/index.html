@@ -67,6 +67,11 @@
     .b-premium { background:#2d1a3d; color:#a371f7; }
     .b-standard { background:#0d2044; color:#58a6ff; }
     .row-count { font-size: 11px; color: #7d8590; font-family: monospace; }
+    .report-toggle { background: transparent; border: 1px solid #388bfd; color: #58a6ff; border-radius: 8px; padding: 7px 11px; font-size: 12px; cursor: pointer; margin: 8px 0; }
+    .report-toggle:hover { background: #0d2044; }
+    .report-link { display: inline-block; border: 1px solid #388bfd; color: #58a6ff; border-radius: 8px; padding: 8px 12px; font-size: 12px; text-decoration: none; margin-top: 6px; }
+    .report-link:hover { background: #0d2044; }
+    .source-tag { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .5px; padding: 3px 8px; border-radius: 4px; margin-bottom: 8px; background: #1a1f2e; color: #58a6ff; }
     .typing { display: flex; align-items: center; gap: 5px; padding: 11px 16px; background: #161b22; border: 1px solid #30363d; border-radius: 14px; border-bottom-left-radius: 4px; width: fit-content; }
     .typing span { width: 7px; height: 7px; border-radius: 50%; background: #1d9e75; animation: blink 1.2s infinite; }
     .typing span:nth-child(2){animation-delay:.2s} .typing span:nth-child(3){animation-delay:.4s}
@@ -132,9 +137,19 @@
   function badge(v){const s=String(v).toLowerCase();if(['active','paid','completed'].includes(s))return'b-active';if(['pending','inactive'].includes(s))return'b-pending';if(['overdue','failed','cancelled','terminated','expired','suspended'].includes(s))return'b-overdue';if(s==='premium')return'b-premium';if(s==='standard')return'b-standard';return'';}
   function cell(v){const s=String(v);if(SW.includes(s.toLowerCase())){const c=badge(s);return c?`<span class="badge ${c}">${esc(s)}</span>`:esc(s);}return esc(s);}
   function tbl(cols,rows){let h='<div class="table-wrap"><table><thead><tr>';cols.forEach(c=>h+=`<th>${esc(c)}</th>`);h+='</tr></thead><tbody>';rows.forEach(r=>{h+='<tr>';r.forEach(v=>h+=`<td>${cell(v)}</td>`);h+='</tr>';});return h+'</tbody></table></div>';}
-  function md(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>');}
+  function md(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');}
   function narrativeBox(text){if(!text)return'';return`<div class="section-label">In plain English</div><div class="narrative-box">${md(text)}</div>`;}
   function ins(list){if(!list||!list.length)return'';let h='<div class="insights-box"><div class="ins-title">&#128200; Key points</div>';list.forEach(i=>h+=`<div class="insight-item">&#128161; ${esc(i)}</div>`);return h+'</div>';}
+  function reportView(d){
+    if(d.report_url)return `<a class="report-link" href="${esc(d.report_url)}" target="_blank">View Detailed Report</a>`;
+    if(!d.rows||!d.rows.length)return'<p style="color:#7d8590;margin-top:8px;">No detailed rows available.</p>';
+    const table=tbl(d.columns,d.rows);
+    if(d.detail_mode==='collapsed'){
+      const id='rep_'+Math.random().toString(36).slice(2);
+      return `<button class="report-toggle" onclick="document.getElementById('${id}').classList.toggle('hidden')">View Detailed Report</button><div id="${id}" class="hidden">${table}<div class="row-count">${d.row_count} row(s) returned</div></div>`;
+    }
+    return `${table}<div class="row-count" style="margin-bottom:4px;">${d.row_count} row(s) returned</div>`;
+  }
   function userMsg(t){const e=document.createElement('div');e.className='msg user';e.innerHTML=`<div class="msg-label">you</div><div class="bubble">${esc(t)}</div>`;chat.appendChild(e);chat.scrollTop=chat.scrollHeight;}
   function typing(){const e=document.createElement('div');e.className='msg bot';e.id='typ';e.innerHTML='<div class="msg-label">billerq ai</div><div class="typing"><span></span><span></span><span></span></div>';chat.appendChild(e);chat.scrollTop=chat.scrollHeight;}
   function rmTyping(){document.getElementById('typ')?.remove();}
@@ -149,9 +164,10 @@
       const box=isChat?`<div class="chat-box">${md(d.narrative||d.summary||'')}</div>`:`<div class="blocked-box">${md(d.narrative||d.summary||'This action is not supported.')}</div>`;
       e.innerHTML=`<div class="msg-label">billerq ai</div><div class="bubble">${tag}${box}${d.explanation&&!isChat?`<div style="font-size:12px;color:#7d8590;margin-top:8px;">&#128196; ${esc(d.explanation)}</div>`:''}</div>`;
     }else{
-      const t=d.rows&&d.rows.length?tbl(d.columns,d.rows):'<p style="color:#7d8590;margin-top:8px;">No records found.</p>';
+      const t=reportView(d);
       const sqlBlock=d.sql?`<div class="section-label">Generated SQL</div><div class="sql-block">${esc(d.sql)}</div>`:'';
-      e.innerHTML=`<div class="msg-label">billerq ai</div><div class="bubble">${d.summary?`<div class="section-label">Summary</div><div class="summary-box">&#128203; ${esc(d.summary)}</div>`:''}${sqlBlock}<div class="section-label">Results</div>${t}<div class="row-count" style="margin-bottom:4px;">${d.row_count} row(s) returned</div>${narrativeBox(d.narrative)}${ins(d.insights)}${d.explanation?`<div style="font-size:12px;color:#7d8590;margin-top:6px;">&#128196; ${esc(d.explanation)}</div>`:''}</div>`;
+      const source=d.service_used||d.route||d.method;
+      e.innerHTML=`<div class="msg-label">billerq ai</div><div class="bubble">${source?`<span class="source-tag">${esc(source)}</span>`:''}${d.summary?`<div class="section-label">Summary</div><div class="summary-box">&#128203; ${esc(d.summary)}</div>`:''}${narrativeBox(d.narrative)}${ins(d.insights)}${sqlBlock}<div class="section-label">Report</div>${t}${d.explanation?`<div style="font-size:12px;color:#7d8590;margin-top:6px;">&#128196; ${esc(d.explanation)}</div>`:''}</div>`;
     }
     chat.appendChild(e);chat.scrollTop=chat.scrollHeight;
   }

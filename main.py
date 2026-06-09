@@ -8,8 +8,20 @@ from pydantic import BaseModel
 from ai import natural_language_to_sql, CHIP_PHRASES
 from summaries import build_narrative
 from config import OLLAMA_MODEL
+from business_services import resolve_customer_details
+from business_router import route_business_query
+from memory import (
+    clear_pending_disambiguation,
+    get_pending_disambiguation,
+    remember_turn,
+    resolve_followup_query,
+)
+from query_logging import init_query_logging_table, log_payload, log_query
+from report_store import get_report, render_report_html, safe_result, store_report
 
 import database
+import re
+import time
 from database import run_query, get_connection, get_companies, get_company_name, resolve_query_company_scope
 from auth import (
     init_auth_tables,
@@ -42,6 +54,7 @@ SESSION_COOKIE = "bq_session"
 async def startup():
     init_auth_tables()
     seed_admin_if_needed()
+    init_query_logging_table()
 
 
 def get_current_user(request: Request):
@@ -78,6 +91,25 @@ class UserActionRequest(BaseModel):
     user_id: int
 
 
+def _attach_report(payload: dict, user: dict, company_id: int | None) -> dict:
+    if payload.get("blocked") or not payload.get("columns"):
+        return payload
+    safe_columns, safe_rows = safe_result(payload.get("columns") or [], payload.get("rows") or [])
+    payload["columns"] = safe_columns
+    payload["rows"] = safe_rows
+    payload["row_count"] = len(safe_rows)
+    report_id = store_report(
+        title=payload.get("report_title") or payload.get("summary") or "BillerQ Report",
+        summary=payload.get("summary") or "",
+        columns=safe_columns,
+        rows=safe_rows,
+        user_id=user.get("id"),
+        company_id=company_id,
+    )
+    payload["report_url"] = f"/report/{report_id}"
+    return payload
+
+
 def _set_session(response: Response, user: dict):
     token = create_session_token(user)
     response.set_cookie(
@@ -108,6 +140,19 @@ async def app_page(request: Request):
         return RedirectResponse(url="/", status_code=302)
     html_file = BASE_DIR / "templates" / "index.html"
     return HTMLResponse(content=html_file.read_text(encoding="utf-8"))
+
+
+@app.get("/report/{report_id}", response_class=HTMLResponse)
+async def report_page(report_id: str, request: Request):
+    user = require_user(request)
+    if not user:
+        return RedirectResponse(url="/", status_code=302)
+    report = get_report(report_id)
+    if not report:
+        return HTMLResponse(content="Report expired or not found.", status_code=404)
+    if user["role"] != "admin" and report.get("company_id") != user.get("company_id"):
+        return HTMLResponse(content="You do not have access to this report.", status_code=403)
+    return HTMLResponse(content=render_report_html(report))
 
 
 @app.get("/companies")
@@ -232,6 +277,7 @@ async def admin_reject(body: UserActionRequest, request: Request):
 
 @app.post("/chat")
 async def chat(body: ChatRequest, request: Request):
+    started_at = time.perf_counter()
     user = require_user(request)
     if not user:
         return JSONResponse(
@@ -242,16 +288,80 @@ async def chat(body: ChatRequest, request: Request):
     user_msg = body.message.strip()
     is_admin = user["role"] == "admin"
 
-    company_id, scope_label = resolve_query_company_scope(user_msg, user)
-
     if not user_msg:
         return JSONResponse({"success": False, "error": "Empty message"}, status_code=400)
 
+    session_id = request.cookies.get(SESSION_COOKIE) or str(user["id"])
+    effective_msg, used_memory = resolve_followup_query(session_id, user_msg)
+    company_id, scope_label = resolve_query_company_scope(effective_msg, user)
+
     try:
-        ai_result = natural_language_to_sql(user_msg, company_id=company_id)
+        pending = get_pending_disambiguation(session_id)
+        user_identifier = re.search(r"[\w.\-+]+@[\w.\-]+\.\w+|\+?\d[\d\s.\-]{5,}\d", user_msg)
+        if pending and user_identifier:
+            pending_company_id = pending.get("company_id", company_id)
+            routed = resolve_customer_details(
+                pending_company_id,
+                scope_label,
+                pending,
+                user_identifier.group(0),
+            )
+            if routed:
+                payload = {
+                    "success": True,
+                    "blocked": False,
+                    "sql": None,
+                    "explanation": "Matched your phone/email reply to the previous customer search.",
+                    "company": scope_label,
+                    "is_admin": is_admin,
+                    **routed,
+                }
+                _attach_report(payload, user, pending_company_id)
+                if not payload.get("needs_disambiguation"):
+                    clear_pending_disambiguation(session_id)
+                remember_turn(session_id, user_msg, effective_msg, payload)
+                log_payload(
+                    user=user,
+                    user_query=user_msg,
+                    effective_query=effective_msg,
+                    payload=payload,
+                    started_at=started_at,
+                )
+                return payload
+
+        routed = route_business_query(effective_msg, company_id, scope_label)
+        if routed:
+            explanation = (
+                "Dashboard-first routing selected an existing business service before SQL generation."
+            )
+            if used_memory:
+                explanation += f" Context applied from the previous turn: {effective_msg}"
+            payload = {
+                "success": True,
+                "blocked": False,
+                "sql": None,
+                "explanation": explanation,
+                "company": scope_label,
+                "is_admin": is_admin,
+                **routed,
+            }
+            if payload.get("needs_disambiguation") and payload.get("disambiguation"):
+                payload["disambiguation"]["company_id"] = company_id
+            _attach_report(payload, user, company_id)
+            remember_turn(session_id, user_msg, effective_msg, payload)
+            log_payload(
+                user=user,
+                user_query=user_msg,
+                effective_query=effective_msg,
+                payload=payload,
+                started_at=started_at,
+            )
+            return payload
+
+        ai_result = natural_language_to_sql(effective_msg, company_id=company_id)
 
         if ai_result.get("blocked"):
-            return {
+            payload = {
                 "success": True,
                 "blocked": True,
                 "conversational": ai_result.get("conversational", False),
@@ -267,16 +377,28 @@ async def chat(body: ChatRequest, request: Request):
                 "company": scope_label,
                 "is_admin": is_admin,
             }
+            _attach_report(payload, user, company_id)
+            remember_turn(session_id, user_msg, effective_msg, payload)
+            log_payload(
+                user=user,
+                user_query=user_msg,
+                effective_query=effective_msg,
+                payload=payload,
+                started_at=started_at,
+            )
+            return payload
 
         sql = ai_result["sql"]
         explanation = ai_result["explanation"]
+        if used_memory:
+            explanation += f" Context applied from the previous turn: {effective_msg}"
         method = ai_result.get("method", "rules")
         table = ai_result.get("table", "customers")
 
         db_result = run_query(sql)
 
         # Retry with AI only for non-chip list queries that returned nothing
-        q_lower = user_msg.lower().strip()
+        q_lower = effective_msg.lower().strip()
         if (
             db_result["row_count"] == 0
             and method in ("rules", "rules-fallback")
@@ -284,7 +406,7 @@ async def chat(body: ChatRequest, request: Request):
             and any(w in q_lower for w in ["show", "get", "find", "list"])
         ):
             retry_ai = natural_language_to_sql(
-                f"{user_msg} (include all matching statuses, use correct column names)",
+                f"{effective_msg} (include all matching statuses, use correct column names)",
                 company_id=company_id,
             )
             if not retry_ai.get("blocked") and retry_ai.get("sql") and retry_ai["sql"] != sql:
@@ -297,7 +419,7 @@ async def chat(body: ChatRequest, request: Request):
 
         row_count = db_result["row_count"]
         narrative, extra_insights = build_narrative(
-            user_msg,
+            effective_msg,
             company_id,
             scope_label,
             table,
@@ -312,7 +434,7 @@ async def chat(body: ChatRequest, request: Request):
             else f"No records found for {scope_label}."
         )
 
-        return {
+        payload = {
             "success": True,
             "blocked": False,
             "intent": "SELECT",
@@ -327,9 +449,33 @@ async def chat(body: ChatRequest, request: Request):
             "company": scope_label,
             "is_admin": is_admin,
             "method": method,
+            "service_used": "Database Query",
+            "route": "database_query",
+            "detail_mode": "expanded" if row_count <= 10 else "collapsed",
         }
+        _attach_report(payload, user, company_id)
+        remember_turn(session_id, user_msg, effective_msg, payload)
+        log_payload(
+            user=user,
+            user_query=user_msg,
+            effective_query=effective_msg,
+            payload=payload,
+            started_at=started_at,
+        )
+        return payload
 
     except Exception as e:
+        log_query(
+            user=user,
+            user_query=user_msg,
+            effective_query=effective_msg,
+            intent=None,
+            service_used=None,
+            sql_used=None,
+            started_at=started_at,
+            success=False,
+            error_message=str(e),
+        )
         return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
 
