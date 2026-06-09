@@ -177,10 +177,16 @@ def _row_dict(columns: list[str], row: list[Any]) -> dict[str, Any]:
 
 def _customer_display_name(customer: dict[str, Any]) -> str:
     for column in ("name", "customer_name", "full_name"):
-        if customer.get(column) not in (None, "", "NULL"):
-            return str(customer[column]).strip()
+        val = customer.get(column)
+        if val not in (None, "", "NULL", "null", "Null"):
+            return str(val).strip()
     first = str(customer.get("first_name") or "").strip()
-    last = str(customer.get("last_name") or "").strip()
+    last  = str(customer.get("last_name")  or "").strip()
+    # Treat the literal string "NULL" as empty — it's a missing value, not a name
+    if first.upper() == "NULL":
+        first = ""
+    if last.upper() == "NULL":
+        last = ""
     full = f"{first} {last}".strip()
     if full:
         return full
@@ -206,21 +212,36 @@ def _customer_quick_lines(customer: dict[str, Any]) -> list[str]:
 
 
 def _extract_customer_name(query: str) -> str | None:
-    cleaned = query.strip().replace("’", "'")
-    patterns = [
-        r"\b(?:give|show|get|find|search)\s+(?:me\s+)?(?:the\s+)?(?:details?\s+(?:of|for)\s+)([A-Za-z][A-Za-z .'\-]{1,60})",
-        r"\b(?:give|show|get|find|search)\s+(?:me\s+)?([A-Za-z][A-Za-z .'\-]{1,60}?)(?:'s)?\s+(?:details?|profile|information|info)\b",
-        r"\bdetails?\s+(?:of|for)\s+([A-Za-z][A-Za-z .'\-]{1,60})",
-        r"\b([A-Za-z][A-Za-z .'\-]{1,60}?)(?:'s)?\s+(?:details?|profile|information|info)\b",
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, cleaned, re.IGNORECASE)
-        if match:
-            name = re.sub(r"\b(customer|subscriber|please|details|detail)\b", "", match.group(1), flags=re.IGNORECASE)
-            name = re.sub(r"\s+", " ", name).strip(" .'")
-            return name or None
-    return None
+    # Noise words that should never be part of a customer name
+    NOISE = r'\b(the|a|an|customer|subscriber|please|details?|profile|information|info|of|for|me|null|give|show|get|find|search)\b'
 
+    cleaned = query.strip()
+    patterns = [
+        # give me the details of Nitara s
+        r'\b(?:give|show|get|find|search)\s+(?:me\s+)?(?:the\s+)?(?:details?\s+(?:of|for)\s+)([A-Za-z][A-Za-z .\'\-]{1,60})',
+        # give me Nitara details / show Rithika profile
+        r"\b(?:give|show|get|find|search)\s+(?:me\s+)?(?:the\s+)?([A-Za-z][A-Za-z .'\-]{1,60}?)(?:'s)?\s+(?:details?|profile|information|info)\b",
+        # details of Nitara / details for John s
+        r"\bdetails?\s+(?:of|for)\s+(?:the\s+)?([A-Za-z][A-Za-z .'\-]{1,60})",
+        # Nitara profile / John info
+        r"\b([A-Za-z][A-Za-z .'\-]{1,60}?)(?:'s)?\s+(?:details?|profile|information|info)\b",
+        # customer Nitara / customer named Nitara
+        r'\b(?:customer|subscriber)\s+(?:named\s+|called\s+)?([A-Za-z][A-Za-z .\'\-]{2,60})',
+        # fallback: "NIBIN NULL give details" — name BEFORE action/detail words at end
+        r'^([A-Za-z][A-Za-z .\'\-]{1,60}?)\s+(?:give|show|get|find|details?|profile|info)\s*$',
+        r'^([A-Za-z][A-Za-z .\'\-]{1,60}?)\s+(?:give|show|get|find|details?|profile|info)\s',
+    ]
+
+    for pattern in patterns:
+        m = re.search(pattern, cleaned, re.IGNORECASE)
+        if m:
+            name = m.group(1).strip()
+            # Remove noise words (including literal NULL, action verbs) from name
+            name = re.sub(NOISE, ' ', name, flags=re.IGNORECASE)
+            name = re.sub(r'\s+', ' ', name).strip(' .,\'"')
+            if name and len(name) >= 2:
+                return name
+    return None
 
 def _identifier_conditions(identifier: str) -> list[str]:
     value = identifier.strip()
@@ -242,19 +263,40 @@ def _identifier_conditions(identifier: str) -> list[str]:
 
 
 def _customer_name_conditions(name: str) -> list[str]:
-    value = name.strip()
+    # Strip trailing/leading NULL tokens before building conditions
+    clean_name = re.sub(r'\bNULL\b', '', name, flags=re.IGNORECASE)
+    clean_name = re.sub(r'\s+', ' ', clean_name).strip()
+    value = clean_name or name.strip()
     if not value:
         return []
-    exact = _sql_value(value)
+
+    # Split into parts so we can search first_name alone when last_name may be NULL
+    parts = value.split()
+    first_part = parts[0] if parts else value
+
+    exact       = _sql_value(value)
     starts_with = "'" + value.replace("'", "''") + "%'"
+    first_exact = _sql_value(first_part)
+
     conditions = []
     name_cols = _customer_name_columns()
+
     for column in name_cols:
         conditions.append(f"{column} = {exact}")
         conditions.append(f"{column} LIKE {starts_with}")
+
     if "first_name" in name_cols and "last_name" in name_cols:
-        conditions.append(f"CONCAT(COALESCE(first_name, ''), ' ', COALESCE(last_name, '')) = {exact}")
-        conditions.append(f"CONCAT(COALESCE(first_name, ''), ' ', COALESCE(last_name, '')) LIKE {starts_with}")
+        # Full name match via CONCAT
+        conditions.append(
+            f"CONCAT(COALESCE(first_name, ''), ' ', COALESCE(last_name, '')) = {exact}"
+        )
+        conditions.append(
+            f"CONCAT(COALESCE(first_name, ''), ' ', COALESCE(last_name, '')) LIKE {starts_with}"
+        )
+        # First name alone — handles cases where last_name is NULL/empty in DB
+        conditions.append(f"first_name = {first_exact}")
+        conditions.append(f"first_name LIKE {first_exact[:-1]}%'")
+
     return conditions
 
 
@@ -319,6 +361,7 @@ def get_customer_details(company_id: int | None, scope_label: str, query: str) -
             "columns": safe_columns,
             "rows": safe_rows,
             "row_count": 0,
+            "names": [],
             "service_used": "Customer Service",
             "route": "business_service",
             "intent": "Customer Details",
@@ -334,6 +377,7 @@ def get_customer_details(company_id: int | None, scope_label: str, query: str) -
             choices.append(
                 f"{idx}. {_customer_display_name(customer)} - phone {_mask_phone(phone)}, email {_mask_email(email)}, {city}"
             )
+        customer_names = [_customer_display_name(c) for c in customers]
         return {
             "summary": f"I found {len(customers)} customers matching {name}.",
             "narrative": (
@@ -345,6 +389,7 @@ def get_customer_details(company_id: int | None, scope_label: str, query: str) -
             "columns": safe_columns,
             "rows": safe_rows,
             "row_count": len(customers),
+            "names": customer_names,
             "service_used": "Customer Service",
             "route": "business_service",
             "intent": "Customer Details",
@@ -367,6 +412,7 @@ def get_customer_details(company_id: int | None, scope_label: str, query: str) -
         "columns": safe_columns,
         "rows": [safe_rows[0]],
         "row_count": 1,
+        "names": [display_name],
         "service_used": "Customer Service",
         "route": "business_service",
         "intent": "Customer Details",
@@ -509,6 +555,7 @@ def get_payments_by_amount_today(
         "columns": result["columns"],
         "rows": result["rows"],
         "row_count": count,
+        "names": names[:10],
         "service_used": "Payment Service",
         "route": "business_service",
         "intent": "Payment Query",

@@ -178,6 +178,13 @@ def build_narrative(
             [],
         )
 
+    # Check if the user is asking for names only
+    asking_names_only = any(phrase in q for phrase in (
+        "names only", "names alone", "just names", "only names",
+        "list names", "show names", "give names", "what are the names",
+        "who are", "customer names", "show me names",
+    ))
+
     stats = {}
     chip_like = len(q.split()) <= 12 and any(
         w in q
@@ -202,6 +209,11 @@ def build_narrative(
                 return ""
             parts = [f"**{v} {k}**" for k, v in sorted(bd.items(), key=lambda x: -x[1])]
             return ", ".join(parts)
+
+        # For "names only" queries — lead with count and list of names
+        if asking_names_only:
+            narrative = f"Here are the **{shown} customer name(s)** for {scope}."
+            return narrative, insights
 
         if "inactive" in q:
             narrative = f"**{shown} non-active customer(s)** shown for {scope}. "

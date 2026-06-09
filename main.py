@@ -13,11 +13,22 @@ from business_router import route_business_query
 from memory import (
     clear_pending_disambiguation,
     get_pending_disambiguation,
+    get_conversation_context,
     remember_turn,
     resolve_followup_query,
 )
 from query_logging import init_query_logging_table, log_payload, log_query
 from report_store import get_report, render_report_html, safe_result, store_report
+from response_cache import (
+    init_cache_db,
+    get_cached_response,
+    set_cached_response,
+    invalidate_company,
+    clear_all as clear_response_cache,
+    purge_expired,
+    cache_stats,
+    clear_sql_cache,
+)
 
 import database
 import re
@@ -55,6 +66,8 @@ async def startup():
     init_auth_tables()
     seed_admin_if_needed()
     init_query_logging_table()
+    init_cache_db()
+    purge_expired()  # clean up stale rows from previous runs
 
 
 def get_current_user(request: Request):
@@ -295,8 +308,24 @@ async def chat(body: ChatRequest, request: Request):
     effective_msg, used_memory = resolve_followup_query(session_id, user_msg)
     company_id, scope_label = resolve_query_company_scope(effective_msg, user)
 
+    # ── Layer 1: Full response cache ─────────────────────────────────────────
+    # Skip cache for follow-up queries (context-dependent) and disambiguations
+    pending = get_pending_disambiguation(session_id)
+    skip_cache = used_memory or bool(pending)
+
+    if not skip_cache:
+        cached = get_cached_response(effective_msg, company_id)
+        if cached:
+            # Re-attach a fresh report for this server session
+            _attach_report(cached, user, company_id)
+            cached["company"] = scope_label
+            cached["is_admin"] = is_admin
+            cached["_cache_hit"] = True
+            remember_turn(session_id, user_msg, effective_msg, cached)
+            return cached
+    # ─────────────────────────────────────────────────────────────────────────
+
     try:
-        pending = get_pending_disambiguation(session_id)
         user_identifier = re.search(r"[\w.\-+]+@[\w.\-]+\.\w+|\+?\d[\d\s.\-]{5,}\d", user_msg)
         if pending and user_identifier:
             pending_company_id = pending.get("company_id", company_id)
@@ -348,6 +377,9 @@ async def chat(body: ChatRequest, request: Request):
             if payload.get("needs_disambiguation") and payload.get("disambiguation"):
                 payload["disambiguation"]["company_id"] = company_id
             _attach_report(payload, user, company_id)
+            # Cache business service responses (dashboard, collection, etc.)
+            if not skip_cache and not payload.get("needs_disambiguation"):
+                set_cached_response(effective_msg, company_id, payload)
             remember_turn(session_id, user_msg, effective_msg, payload)
             log_payload(
                 user=user,
@@ -358,7 +390,7 @@ async def chat(body: ChatRequest, request: Request):
             )
             return payload
 
-        ai_result = natural_language_to_sql(effective_msg, company_id=company_id)
+        ai_result = natural_language_to_sql(effective_msg, company_id=company_id, session_id=session_id)
 
         if ai_result.get("blocked"):
             payload = {
@@ -408,6 +440,7 @@ async def chat(body: ChatRequest, request: Request):
             retry_ai = natural_language_to_sql(
                 f"{effective_msg} (include all matching statuses, use correct column names)",
                 company_id=company_id,
+                session_id=session_id,
             )
             if not retry_ai.get("blocked") and retry_ai.get("sql") and retry_ai["sql"] != sql:
                 retry_result = run_query(retry_ai["sql"])
@@ -428,6 +461,10 @@ async def chat(body: ChatRequest, request: Request):
             row_count,
         )
 
+        # Extract names for immediate display in the response
+        from ai import _extract_names_from_rows
+        names_list = _extract_names_from_rows(db_result["columns"], db_result["rows"])
+
         summary = (
             f"Found {row_count} record(s) for {scope_label}."
             if row_count
@@ -443,6 +480,7 @@ async def chat(body: ChatRequest, request: Request):
             "summary": summary,
             "narrative": narrative,
             "insights": extra_insights,
+            "names": names_list,
             "columns": db_result["columns"],
             "rows": db_result["rows"],
             "row_count": row_count,
@@ -454,6 +492,10 @@ async def chat(body: ChatRequest, request: Request):
             "detail_mode": "expanded" if row_count <= 10 else "collapsed",
         }
         _attach_report(payload, user, company_id)
+        # ── Layer 1: persist to response cache ───────────────────────────────
+        if not skip_cache:
+            set_cached_response(effective_msg, company_id, payload)
+        # ─────────────────────────────────────────────────────────────────────
         remember_turn(session_id, user_msg, effective_msg, payload)
         log_payload(
             user=user,
@@ -485,6 +527,7 @@ async def clear_cache(request: Request):
     if not admin:
         return JSONResponse({"success": False, "error": "Admin access required"}, status_code=403)
     try:
+        # Clear schema/column caches
         database._SCHEMA_CACHE = None
         database._SCHEMA_CACHE_TIME = 0
         database._COLUMNS_CACHE = None
@@ -493,9 +536,33 @@ async def clear_cache(request: Request):
         database._BUSINESS_CONTEXT_CACHE_TIME = 0
         database._COMPANIES_LIST_CACHE = None
         database._COMPANIES_LIST_CACHE_TIME = 0
-        return {"success": True, "message": "Cache cleared successfully"}
+        # Clear response and SQL caches
+        rows = clear_response_cache()
+        clear_sql_cache()
+        return {"success": True, "message": f"All caches cleared. {rows} response cache entries removed."}
     except Exception as e:
         return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+
+@app.get("/cache/stats")
+async def get_cache_stats(request: Request):
+    admin = require_admin(request)
+    if not admin:
+        return JSONResponse({"success": False, "error": "Admin access required"}, status_code=403)
+    stats = cache_stats()
+    return {"success": True, "cache": stats}
+
+
+@app.post("/cache/invalidate")
+async def invalidate_cache(request: Request):
+    """Invalidate cache for the current user's company — call this after new data is added."""
+    user = require_user(request)
+    if not user:
+        return JSONResponse({"success": False, "error": "Not authenticated"}, status_code=401)
+    company_id = user.get("company_id")
+    rows = invalidate_company(company_id)
+    clear_sql_cache()
+    return {"success": True, "message": f"Cache invalidated for your company. {rows} entries cleared."}
 
 
 @app.get("/health")

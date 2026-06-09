@@ -88,6 +88,10 @@
     #send-btn:hover { background: #17856a; }
     #send-btn:disabled { background: #21262d; color: #7d8590; cursor: not-allowed; }
     .hidden { display: none !important; }
+    .names-list { background: #1a2a1e; border: 1px solid #1d9e75; border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; }
+    .name-item { font-size: 13px; color: #e6edf3; padding: 4px 0; border-bottom: 1px solid #21262d; }
+    .name-item:last-child { border-bottom: none; }
+    .names-more { font-size: 11px; color: #7d8590; margin-top: 6px; font-style: italic; }
   </style>
 </head>
 <body>
@@ -140,15 +144,29 @@
   function md(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');}
   function narrativeBox(text){if(!text)return'';return`<div class="section-label">In plain English</div><div class="narrative-box">${md(text)}</div>`;}
   function ins(list){if(!list||!list.length)return'';let h='<div class="insights-box"><div class="ins-title">&#128200; Key points</div>';list.forEach(i=>h+=`<div class="insight-item">&#128161; ${esc(i)}</div>`);return h+'</div>';}
+
+  function namesList(names, rowCount){
+    if(!names||!names.length) return '';
+    const shown = names.slice(0,10);
+    const more = rowCount > 10 ? `<div class="names-more">…and ${rowCount-10} more. See full report below.</div>` : '';
+    let h = '<div class="names-list">';
+    shown.forEach(n => h += `<div class="name-item">&#128100; ${esc(n)}</div>`);
+    h += more + '</div>';
+    return h;
+  }
+
   function reportView(d){
-    if(d.report_url)return `<a class="report-link" href="${esc(d.report_url)}" target="_blank">View Detailed Report</a>`;
-    if(!d.rows||!d.rows.length)return'<p style="color:#7d8590;margin-top:8px;">No detailed rows available.</p>';
+    if(d.report_url)return `<a class="report-link" href="${esc(d.report_url)}" target="_blank">&#128196; View Detailed Report</a>`;
+    if(!d.rows||!d.rows.length)return'';
     const table=tbl(d.columns,d.rows);
-    if(d.detail_mode==='collapsed'){
-      const id='rep_'+Math.random().toString(36).slice(2);
-      return `<button class="report-toggle" onclick="document.getElementById('${id}').classList.toggle('hidden')">View Detailed Report</button><div id="${id}" class="hidden">${table}<div class="row-count">${d.row_count} row(s) returned</div></div>`;
-    }
-    return `${table}<div class="row-count" style="margin-bottom:4px;">${d.row_count} row(s) returned</div>`;
+    const id='rep_'+Math.random().toString(36).slice(2);
+    return `<button class="report-toggle" onclick="toggleReport('${id}', this)">&#128202; View Detailed Report</button><div id="${id}" class="hidden">${table}<div class="row-count">${d.row_count} row(s) returned</div></div>`;
+  }
+
+  function toggleReport(id, btn){
+    const el=document.getElementById(id);
+    const hidden=el.classList.toggle('hidden');
+    btn.textContent = hidden ? '📊 View Detailed Report' : '📊 Hide Report';
   }
   function userMsg(t){const e=document.createElement('div');e.className='msg user';e.innerHTML=`<div class="msg-label">you</div><div class="bubble">${esc(t)}</div>`;chat.appendChild(e);chat.scrollTop=chat.scrollHeight;}
   function typing(){const e=document.createElement('div');e.className='msg bot';e.id='typ';e.innerHTML='<div class="msg-label">billerq ai</div><div class="typing"><span></span><span></span><span></span></div>';chat.appendChild(e);chat.scrollTop=chat.scrollHeight;}
@@ -167,7 +185,11 @@
       const t=reportView(d);
       const sqlBlock=d.sql?`<div class="section-label">Generated SQL</div><div class="sql-block">${esc(d.sql)}</div>`:'';
       const source=d.service_used||d.route||d.method;
-      e.innerHTML=`<div class="msg-label">billerq ai</div><div class="bubble">${source?`<span class="source-tag">${esc(source)}</span>`:''}${d.summary?`<div class="section-label">Summary</div><div class="summary-box">&#128203; ${esc(d.summary)}</div>`:''}${narrativeBox(d.narrative)}${ins(d.insights)}${sqlBlock}<div class="section-label">Report</div>${t}${d.explanation?`<div style="font-size:12px;color:#7d8590;margin-top:6px;">&#128196; ${esc(d.explanation)}</div>`:''}</div>`;
+      // Names list — shown immediately before the detailed report
+      const namesHtml = namesList(d.names||[], d.row_count||0);
+      const hasNamesInNarrative = d.narrative && (d.narrative.includes('- ') || d.narrative.includes('•'));
+      const showNames = namesHtml && !hasNamesInNarrative;
+      e.innerHTML=`<div class="msg-label">billerq ai</div><div class="bubble">${source?`<span class="source-tag">${esc(source)}</span>`:''}${d.summary?`<div class="section-label">Summary</div><div class="summary-box">&#128203; ${esc(d.summary)}</div>`:''}${narrativeBox(d.narrative)}${ins(d.insights)}${showNames?'<div class="section-label">Names</div>'+namesHtml:''}${d.row_count>0?'<div class="section-label">Report</div>'+t:''}${sqlBlock}${d.explanation?`<div style="font-size:12px;color:#7d8590;margin-top:6px;">&#128196; ${esc(d.explanation)}</div>`:''}</div>`;
     }
     chat.appendChild(e);chat.scrollTop=chat.scrollHeight;
   }

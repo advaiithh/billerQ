@@ -97,4 +97,5 @@ echo.
 echo Press Ctrl+C to stop.
 echo.
 
-"%PY%" -m uvicorn main:app --host 127.0.0.1 --port %PORT% --reload
+cd /d "%~dp0"
+"%PY%" -m uvicorn main:app --host 127.0.0.1 --port %PORT% --reload --reload-dir "%~dp0"

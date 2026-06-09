@@ -47,9 +47,17 @@ def classify_business_intent(query: str) -> dict:
             entities["status"] = status
             break
 
+    # Customer details: show/get/find/details for a named person
     if re.search(r"\b(customer|subscriber|details?|profile|information|info)\b", q) and (
         re.search(r"\b(details?|profile|information|info)\b", q)
         or re.search(r"\b(give|show|get|find|search)\b", q)
+    ):
+        return {"intent": "Customer Details", "entities": entities, "route": "customer_details"}
+
+    # Payments/invoices for a specific named person (resolved from pronoun)
+    if re.search(r"\b(payment|payments|invoice|invoices|bill|bills|due|dues)\b", q) and (
+        re.search(r"\b(of|for|by|from)\s+[A-Z][a-z]+", query)
+        or re.search(r"\b(his|her|their|this customer|that customer)\b", q)
     ):
         return {"intent": "Customer Details", "entities": entities, "route": "customer_details"}
 

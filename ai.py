@@ -1,8 +1,9 @@
 import re
 import json
 import requests
-from memory import memory
+from memory import memory, get_conversation_context
 from config import OLLAMA_MODEL, OLLAMA_URL, OLLAMA_TIMEOUT_SEC
+from response_cache import get_cached_sql, set_cached_sql
 from smart_search import is_search_query, smart_search_sql
 from database import (
     get_table_schema,
@@ -461,7 +462,11 @@ def _classify_intent_rules(user_query: str) -> str:
 
 
 def _try_ollama_intent(user_query: str) -> str | None:
-    """Ask Qwen to classify intent before generating SQL."""
+    """Ask Qwen to classify intent before generating SQL. Cached in memory."""
+    # Intent classification is fast but we still cache it to skip Ollama for repeats
+    cached = get_cached_sql("__intent__" + user_query, None)
+    if cached:
+        return cached
     prompt = f"""You classify user messages for a read-only billing database chatbot.
 
 Reply with ONLY one word — no punctuation, no explanation:
@@ -499,8 +504,10 @@ Intent:"""
         text = response.json().get("response", "").strip().upper()
         for intent in ("SELECT", "INSERT", "UPDATE", "DELETE", "DDL", "OTHER"):
             if intent in text.split():
+                set_cached_sql("__intent__" + user_query, None, intent)
                 return intent
         if text.startswith("SELECT"):
+            set_cached_sql("__intent__" + user_query, None, "SELECT")
             return "SELECT"
         return None
     except Exception:
@@ -566,7 +573,12 @@ def _extract_sql_from_llm_response(text: str) -> str:
     return text
 
 
-def _try_ollama_sql(user_query: str, company_id: int, table: str) -> str | None:
+def _try_ollama_sql(user_query: str, company_id: int, table: str, session_id: str | None = None) -> str | None:
+    # ── Layer 2: SQL cache — skip Ollama entirely if we've seen this before ──
+    cached_sql = get_cached_sql(user_query, company_id)
+    if cached_sql:
+        return cached_sql
+
     try:
         schema = get_table_schema()
         context = get_business_context()
@@ -587,6 +599,18 @@ def _try_ollama_sql(user_query: str, company_id: int, table: str) -> str | None:
 - Exclude soft-deleted rows: deleted_at IS NULL where deleted_at column exists
 - Include company_id in results when showing data across all companies"""
 
+        # Build conversation context block
+        conv_context = ""
+        if session_id:
+            history = get_conversation_context(session_id, max_turns=4)
+            if history:
+                lines = []
+                for turn in history:
+                    lines.append(f"  User: {turn['user']}")
+                    if turn.get("entity"):
+                        lines.append(f"  (entity mentioned: {turn['entity']})")
+                conv_context = "\nCONVERSATION HISTORY (for context resolution — pronouns like 'her/him/they' refer to the last entity):\n" + "\n".join(lines) + "\n"
+
         prompt = f"""You are a MySQL expert for a billing system called BillerQ.
 Generate ONLY a single SELECT query. No explanation, no markdown unless using a sql code block.
 
@@ -603,9 +627,10 @@ IMPORTANT COLUMN MAPPINGS:
 - customer_subscriptions status values: inactive, pending, active, terminated, expired
 - orders payment_status values: pending, partially paid, paid
 - overdue invoices: due_date < NOW() AND payment_status != 'paid'
-
+- To get customer names: use first_name, last_name columns or CONCAT(first_name, ' ', last_name)
+- Always SELECT name columns (first_name, last_name, name) when the user asks for names or people
 {company_scope}
-
+{conv_context}
 USER QUESTION:
 {user_query}
 
@@ -631,6 +656,8 @@ Return ONLY the SQL query:"""
         sql = _extract_sql_from_llm_response(result)
         if not sql.upper().startswith("SELECT"):
             return None
+        # ── Store in SQL cache so the next identical question skips Ollama ──
+        set_cached_sql(user_query, company_id, sql)
         return sql
 
     except Exception:
@@ -669,7 +696,46 @@ def _use_rules_only(user_query: str) -> bool:
     return False
 
 
-def natural_language_to_sql(user_query: str, company_id: int = None) -> dict:
+def _build_names_sql(user_query: str, table: str) -> str:
+    """Build a SELECT targeting name columns only — for 'show names only' queries."""
+    cols = get_table_columns_map().get(table, [])
+    name_parts = []
+    if "first_name" in cols and "last_name" in cols:
+        name_parts.append("TRIM(CONCAT(COALESCE(first_name,''), ' ', COALESCE(last_name,''))) AS full_name")
+    elif "name" in cols:
+        name_parts.append("name")
+    elif "customer_name" in cols:
+        name_parts.append("customer_name")
+    elif "full_name" in cols:
+        name_parts.append("full_name")
+
+    if not name_parts:
+        # fallback: generic sql
+        return _build_sql_from_query(user_query, table)
+
+    if "id" in cols:
+        name_parts.insert(0, "id")
+
+    soft_del = _soft_delete_clause(table)
+    where = f" WHERE {soft_del}" if soft_del else ""
+    status_col = _resolve_status_column(table)
+    user_lower = user_query.lower()
+
+    # Apply any status filter from the query
+    conditions = [soft_del] if soft_del else []
+    if _has_word(user_lower, "inactive") or _has_word(user_lower, "disabled"):
+        conditions.append(f"{status_col} != 'active'")
+    elif _has_word(user_lower, "active") and "inactive" not in user_lower:
+        conditions.append(f"{status_col} = 'active'")
+
+    sql = f"SELECT {', '.join(name_parts)} FROM {table}"
+    if conditions:
+        sql += " WHERE " + " AND ".join(conditions)
+    sql += " LIMIT 100;"
+    return sql
+
+
+def natural_language_to_sql(user_query: str, company_id: int = None, session_id: str | None = None) -> dict:
     intent_info = classify_intent(user_query)
     intent = intent_info["intent"]
 
@@ -711,8 +777,18 @@ def natural_language_to_sql(user_query: str, company_id: int = None) -> dict:
         sql = _build_sql_from_query(user_query, table)
         method = "rules"
     else:
-        sql = _try_ollama_sql(user_query, company_id, table)
-        method = "ai"
+        # "names only" queries — use rules + ensure name columns are selected
+        q_low = user_query.lower()
+        is_names_query = any(phrase in q_low for phrase in (
+            "names only", "names alone", "just names", "only names",
+            "show names", "list names", "give names",
+        ))
+        if is_names_query:
+            sql = _build_names_sql(user_query, table)
+            method = "rules-names"
+        else:
+            sql = _try_ollama_sql(user_query, company_id, table, session_id=session_id)
+            method = "ai"
         if not sql:
             if _classify_intent_rules(user_query) != "SELECT":
                 message = BLOCKED_MESSAGES.get(
@@ -753,7 +829,7 @@ def natural_language_to_sql(user_query: str, company_id: int = None) -> dict:
 
 def generate_full_response(user_query: str, columns: list, rows: list) -> dict:
     if not rows:
-        return {"summary": "No records found.", "insights": []}
+        return {"summary": "No records found.", "insights": [], "names": []}
 
     summary = f"Found {len(rows)} record(s)."
     insights = []
@@ -766,4 +842,61 @@ def generate_full_response(user_query: str, columns: list, rows: list) -> dict:
     elif "order" in q or "invoice" in q:
         insights.append(f"{len(rows)} orders/invoices")
 
-    return {"summary": summary, "insights": insights}
+    # Extract names from result columns
+    names = _extract_names_from_rows(columns, rows)
+    return {"summary": summary, "insights": insights, "names": names}
+
+
+def _extract_names_from_rows(columns: list, rows: list) -> list[str]:
+    """
+    Pull human-readable names from query result rows.
+    Handles: first_name+last_name, name, customer_name, full_name, company_name.
+    Never returns literal "NULL" as part of a name.
+    """
+    if not rows or not columns:
+        return []
+
+    col_lower = [c.lower() for c in columns]
+
+    def idx(name: str) -> int | None:
+        try:
+            return col_lower.index(name)
+        except ValueError:
+            return None
+
+    def _clean(val) -> str:
+        """Strip NULL tokens and whitespace from a name value."""
+        s = str(val or "").strip()
+        if s.upper() == "NULL" or not s:
+            return ""
+        # Remove embedded NULLs e.g. "NIBIN NULL"
+        s = re.sub(r'\bNULL\b', '', s, flags=re.IGNORECASE).strip()
+        return s
+
+    first_idx = idx("first_name")
+    last_idx  = idx("last_name")
+    name_idx  = idx("full_name") or idx("customer_name") or idx("name") or idx("company_name")
+
+    names = []
+    for row in rows[:20]:  # cap at 20 for display
+        if first_idx is not None:
+            first = _clean(row[first_idx])
+            last  = _clean(row[last_idx]) if last_idx is not None else ""
+            full  = f"{first} {last}".strip()
+            if full:
+                names.append(full)
+                continue
+        if name_idx is not None:
+            val = _clean(row[name_idx])
+            if val:
+                names.append(val)
+                continue
+        # Fallback: first non-id string column
+        for i, col in enumerate(col_lower):
+            if "id" not in col and row[i]:
+                val = _clean(row[i])
+                if val and not val.isdigit():
+                    names.append(val)
+                    break
+
+    return [n for n in names if n]
