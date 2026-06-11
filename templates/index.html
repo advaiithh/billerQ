@@ -53,6 +53,11 @@
     .insights-box { background: #1a1f2e; border: 1px solid #388bfd; border-radius: 8px; padding: 10px 14px; margin-bottom: 10px; }
     .insights-box .ins-title { font-size: 11px; color: #58a6ff; text-transform: uppercase; letter-spacing: .7px; margin-bottom: 7px; }
     .insight-item { font-size: 13px; color: #adbac7; margin-bottom: 5px; line-height: 1.5; padding-left: 4px; }
+    .names-box { background: #0f1a14; border: 1px solid #1d9e75; border-radius: 10px; padding: 12px 14px; margin-bottom: 10px; max-height: 320px; overflow-y: auto; }
+    .names-box .names-title { font-size: 11px; color: #3fb950; text-transform: uppercase; letter-spacing: .7px; margin-bottom: 8px; }
+    .names-item { font-size: 13.5px; color: #c9d1d9; padding: 6px 8px; border-bottom: 1px solid #1c2128; line-height: 1.45; }
+    .names-item:last-child { border-bottom: none; }
+
     .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid #30363d; margin-bottom: 8px; }
     table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
     thead tr { background: #1d2a22; }
@@ -140,6 +145,11 @@
   function md(s){return esc(s).replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/\n/g,'<br>');}
   function narrativeBox(text){if(!text)return'';return`<div class="section-label">In plain English</div><div class="narrative-box">${md(text)}</div>`;}
   function ins(list){if(!list||!list.length)return'';let h='<div class="insights-box"><div class="ins-title">&#128200; Key points</div>';list.forEach(i=>h+=`<div class="insight-item">&#128161; ${esc(i)}</div>`);return h+'</div>';}
+  function namesListBox(list){
+    if(!list||!list.length)return'';
+    const items=list.map(n=>`<div class="names-item">&#128100; ${esc(n)}</div>`).join('');
+    return `<div class="names-box"><div class="names-title">&#128203; Names</div>${items}</div>`;
+  }
   function reportView(d){
     if(d.report_url)return `<a class="report-link" href="${esc(d.report_url)}" target="_blank">View Detailed Report</a>`;
     if(!d.rows||!d.rows.length)return'<p style="color:#7d8590;margin-top:8px;">No detailed rows available.</p>';
@@ -150,6 +160,7 @@
     }
     return `${table}<div class="row-count" style="margin-bottom:4px;">${d.row_count} row(s) returned</div>`;
   }
+
   function userMsg(t){const e=document.createElement('div');e.className='msg user';e.innerHTML=`<div class="msg-label">you</div><div class="bubble">${esc(t)}</div>`;chat.appendChild(e);chat.scrollTop=chat.scrollHeight;}
   function typing(){const e=document.createElement('div');e.className='msg bot';e.id='typ';e.innerHTML='<div class="msg-label">billerq ai</div><div class="typing"><span></span><span></span><span></span></div>';chat.appendChild(e);chat.scrollTop=chat.scrollHeight;}
   function rmTyping(){document.getElementById('typ')?.remove();}
@@ -167,8 +178,11 @@
       const t=reportView(d);
       const sqlBlock=d.sql?`<div class="section-label">Generated SQL</div><div class="sql-block">${esc(d.sql)}</div>`:'';
       const source=d.service_used||d.route||d.method;
-      e.innerHTML=`<div class="msg-label">billerq ai</div><div class="bubble">${source?`<span class="source-tag">${esc(source)}</span>`:''}${d.summary?`<div class="section-label">Summary</div><div class="summary-box">&#128203; ${esc(d.summary)}</div>`:''}${narrativeBox(d.narrative)}${ins(d.insights)}${sqlBlock}<div class="section-label">Report</div>${t}${d.explanation?`<div style="font-size:12px;color:#7d8590;margin-top:6px;">&#128196; ${esc(d.explanation)}</div>`:''}</div>`;
+      // Names list shows immediately (no click required) when present
+      const namesBox = namesListBox(d.names_list);
+      e.innerHTML=`<div class="msg-label">billerq ai</div><div class="bubble">${source?`<span class="source-tag">${esc(source)}</span>`:''}${d.summary?`<div class="section-label">Summary</div><div class="summary-box">&#128203; ${esc(d.summary)}</div>`:''}${narrativeBox(d.narrative)}${namesBox}${ins(d.insights)}${sqlBlock}<div class="section-label">Report</div>${t}${d.explanation?`<div style="font-size:12px;color:#7d8590;margin-top:6px;">&#128196; ${esc(d.explanation)}</div>`:''}</div>`;
     }
+
     chat.appendChild(e);chat.scrollTop=chat.scrollHeight;
   }
 

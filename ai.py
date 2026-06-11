@@ -105,6 +105,74 @@ CHIP_PHRASES = {
     "top 5 orders by amount",
 }
 
+# Phrases that signal "I just want the names, not full records"
+_NAMES_ONLY_PATTERNS = (
+    r"\bnames?\s+alone\b",
+    r"\bonly\s+(?:the\s+)?names?\b",
+    r"\bjust\s+the\s+names?\b",
+    r"\bjust\s+names?\b",
+    r"\bshow\s+(?:me\s+)?(?:the\s+)?names?\s+(?:alone|only)\b",
+    r"\bgive\s+(?:me\s+)?(?:the\s+)?names?\s+(?:alone|only)\b",
+    r"\blist\s+(?:the\s+)?names?\s+(?:alone|only)\b",
+    r"\bnames?\s+of\s+(?:the\s+)?(?:customers?|subscribers?|users?)\b",
+    r"\bshow\s+(?:me\s+)?(?:the\s+)?names?\s+of\b",
+    r"\bgive\s+(?:me\s+)?(?:the\s+)?names?\s+of\b",
+    r"\blist\s+(?:the\s+)?names?\s+of\b",
+    r"\bgive\s+(?:me\s+)?only\s+the\s+names?\b",
+    r"\bshow\s+(?:me\s+)?only\s+(?:the\s+)?names?\b",
+)
+
+
+
+def _wants_names_only(user_query: str) -> bool:
+    q = user_query.lower().strip()
+    return any(re.search(p, q) for p in _NAMES_ONLY_PATTERNS)
+
+
+def _project_names_only(sql: str, table: str) -> str:
+    """
+    Rewrite a `SELECT * FROM <table> ...` query to project only the name
+    columns, in priority order, with deduplication.
+    """
+    if table == "customers":
+        name_cols = ["name", "customer_name", "full_name", "first_name"]
+    elif table == "companies":
+        name_cols = ["name", "company_name"]
+    elif table == "customer_subscriptions":
+        name_cols = ["plan_name", "plan"]
+    elif table == "orders":
+        name_cols = ["invoice_number", "order_number", "id"]
+    elif table == "payments":
+        name_cols = ["payment_ref", "reference", "transaction_id", "id"]
+    elif table == "complaints":
+        name_cols = ["title", "subject", "id"]
+    elif table == "packages":
+        name_cols = ["name", "package_name"]
+    else:
+        name_cols = ["name"]
+
+    # Pull the live column list to verify which exist
+    from database import get_table_columns_map
+    cols_map = get_table_columns_map()
+    available = cols_map.get(table, [])
+    chosen = [c for c in name_cols if c in available]
+    if not chosen:
+        chosen = ["id"]
+
+    cols_sql = ", ".join(chosen)
+    # Replace leading SELECT clause; keep everything after FROM
+    new_sql = re.sub(
+        r"^\s*SELECT\s+[\s\S]+?\s+FROM\b",
+        f"SELECT DISTINCT {cols_sql} FROM",
+        sql,
+        count=1,
+        flags=re.IGNORECASE,
+    )
+    # Add a sane ORDER BY so names come back alphabetized
+    if re.search(r"\bORDER\s+BY\b", new_sql, re.IGNORECASE):
+        return new_sql
+    return new_sql.rstrip(";") + f" ORDER BY {chosen[0]} ASC;"
+
 BLOCKED_MESSAGES = {
     "INSERT": (
         "This assistant is **read-only** — it cannot add or create records in the database. "

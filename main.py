@@ -5,17 +5,26 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
-from ai import natural_language_to_sql, CHIP_PHRASES
+from ai import (
+    natural_language_to_sql,
+    CHIP_PHRASES,
+    _wants_names_only,
+    _project_names_only,
+)
 from summaries import build_narrative
+
 from config import OLLAMA_MODEL
 from business_services import resolve_customer_details
 from business_router import route_business_query
 from memory import (
     clear_pending_disambiguation,
     get_pending_disambiguation,
+    remember_result,
     remember_turn,
     resolve_followup_query,
+    try_filter_from_cache,
 )
+
 from query_logging import init_query_logging_table, log_payload, log_query
 from report_store import get_report, render_report_html, safe_result, store_report
 
@@ -108,6 +117,56 @@ def _attach_report(payload: dict, user: dict, company_id: int | None) -> dict:
     )
     payload["report_url"] = f"/report/{report_id}"
     return payload
+
+
+def _build_payload_from_cached_rows(
+    *,
+    user_msg: str,
+    effective_msg: str,
+    scope_label: str,
+    is_admin: bool,
+    table: str,
+    columns: list,
+    rows: list,
+    matched_by: str,
+) -> dict:
+    """
+    Build a chat payload from a filtered result (served from the session cache
+    without re-hitting the database).
+    """
+    row_count = len(rows)
+    narrative, extra_insights = build_narrative(
+        effective_msg, None, scope_label, table, columns, rows, row_count,
+    )
+    summary = (
+        f"Found {row_count} record(s) for {scope_label} (served from session cache, matched on {matched_by})."
+        if row_count
+        else f"No records found in the previous result for {matched_by}."
+    )
+    return {
+        "success": True,
+        "blocked": False,
+        "intent": "SELECT",
+        "sql": None,
+        "explanation": (
+            f"Filtered from the previous query's result in the session cache "
+            f"(matched on {matched_by}). No new database call was made."
+        ),
+        "summary": summary,
+        "narrative": narrative,
+        "insights": extra_insights,
+        "columns": columns,
+        "rows": rows,
+        "row_count": row_count,
+        "company": scope_label,
+        "is_admin": is_admin,
+        "method": "session-cache",
+        "service_used": "Session Cache",
+        "route": "session_cache",
+        "detail_mode": "collapsed",
+        "served_from_cache": True,
+    }
+
 
 
 def _set_session(response: Response, user: dict):
@@ -329,11 +388,37 @@ async def chat(body: ChatRequest, request: Request):
                 )
                 return payload
 
+        # Try the session result cache first: if the previous query's rows can
+        # satisfy the follow-up, return them without re-hitting the database.
+        cached = try_filter_from_cache(session_id, user_msg)
+        if cached:
+            payload = _build_payload_from_cached_rows(
+                user_msg=user_msg,
+                effective_msg=effective_msg,
+                scope_label=scope_label,
+                is_admin=is_admin,
+                table=cached["table"],
+                columns=cached["columns"],
+                rows=cached["rows"],
+                matched_by=cached["matched_by"],
+            )
+            _attach_report(payload, user, company_id)
+            remember_turn(session_id, user_msg, effective_msg, payload)
+            log_payload(
+                user=user,
+                user_query=user_msg,
+                effective_query=effective_msg,
+                payload=payload,
+                started_at=started_at,
+            )
+            return payload
+
         routed = route_business_query(effective_msg, company_id, scope_label)
         if routed:
             explanation = (
                 "Dashboard-first routing selected an existing business service before SQL generation."
             )
+
             if used_memory:
                 explanation += f" Context applied from the previous turn: {effective_msg}"
             payload = {
@@ -395,6 +480,11 @@ async def chat(body: ChatRequest, request: Request):
         method = ai_result.get("method", "rules")
         table = ai_result.get("table", "customers")
 
+        # If the user asked for names only, rewrite the SQL to project name columns
+        names_only = _wants_names_only(effective_msg)
+        if names_only and sql.upper().lstrip().startswith("SELECT"):
+            sql = _project_names_only(sql, table)
+
         db_result = run_query(sql)
 
         # Retry with AI only for non-chip list queries that returned nothing
@@ -410,9 +500,12 @@ async def chat(body: ChatRequest, request: Request):
                 company_id=company_id,
             )
             if not retry_ai.get("blocked") and retry_ai.get("sql") and retry_ai["sql"] != sql:
-                retry_result = run_query(retry_ai["sql"])
+                retry_sql = retry_ai["sql"]
+                if names_only:
+                    retry_sql = _project_names_only(retry_sql, table)
+                retry_result = run_query(retry_sql)
                 if retry_result["row_count"] > 0:
-                    sql = retry_ai["sql"]
+                    sql = retry_sql
                     db_result = retry_result
                     explanation = retry_ai["explanation"]
                     table = retry_ai.get("table", table)
@@ -428,11 +521,45 @@ async def chat(body: ChatRequest, request: Request):
             row_count,
         )
 
-        summary = (
-            f"Found {row_count} record(s) for {scope_label}."
-            if row_count
-            else f"No records found for {scope_label}."
-        )
+        # Build the immediate names list for fast display (when applicable)
+        names_list: list[str] = []
+        if names_only and row_count > 0:
+            # Take the first column of every row, dedupe, drop empties
+            seen: set[str] = set()
+            for r in db_result["rows"]:
+                if not r:
+                    continue
+                value = str(r[0]).strip()
+                if not value or value.lower() in ("null", "none"):
+                    continue
+                key = value.lower()
+                if key in seen:
+                    continue
+                seen.add(key)
+                names_list.append(value)
+
+        # If the user wants names, replace the narrative with a names-list bullet
+        # list so the user sees the names immediately without opening a report.
+        if names_only and names_list:
+            display = names_list[:50]
+            extra = max(len(names_list) - len(display), 0)
+            bullet_lines = "\n".join(f"- {name}" for name in display)
+            if extra:
+                bullet_lines += f"\n- …and {extra} more"
+            narrative = (
+                f"Here are the **{len(names_list)} name(s)** for {scope_label}:\n\n"
+                f"{bullet_lines}"
+            )
+            summary = f"Found {len(names_list)} name(s) for {scope_label}."
+            extra_insights = [
+                "Showing names only. Open the Detailed Report to see more columns."
+            ]
+        else:
+            summary = (
+                f"Found {row_count} record(s) for {scope_label}."
+                if row_count
+                else f"No records found for {scope_label}."
+            )
 
         payload = {
             "success": True,
@@ -451,8 +578,24 @@ async def chat(body: ChatRequest, request: Request):
             "method": method,
             "service_used": "Database Query",
             "route": "database_query",
-            "detail_mode": "expanded" if row_count <= 10 else "collapsed",
+            # ALWAYS defer the full report — user clicks "View Detailed Report"
+            # to see columns/rows. The narrative already shows a quick summary
+            # (and names, when applicable) so the response is immediately useful.
+            "detail_mode": "collapsed",
+            "names_only": names_only,
+            "names_list": names_list[:50] if names_only else [],
         }
+        # Save the result rows in the session cache so follow-ups (status filter,
+        # name lookup, repeat prompt) can be answered without a new DB call.
+        if row_count > 0 and db_result.get("columns"):
+            remember_result(
+                session_id,
+                table=table,
+                columns=db_result["columns"],
+                rows=db_result["rows"],
+                user_query=user_msg,
+            )
+
         _attach_report(payload, user, company_id)
         remember_turn(session_id, user_msg, effective_msg, payload)
         log_payload(
@@ -465,6 +608,7 @@ async def chat(body: ChatRequest, request: Request):
         return payload
 
     except Exception as e:
+
         log_query(
             user=user,
             user_query=user_msg,
