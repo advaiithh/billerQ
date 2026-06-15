@@ -34,8 +34,7 @@ echo Installing required Python packages...
 if errorlevel 1 (
   echo.
   echo Full requirements install failed. Installing runtime fallback packages...
-  echo This avoids the Python 3.13 LangChain/Numpy build issue.
-  %PIP% install fastapi==0.111.0 uvicorn==0.29.0 mysql-connector-python==8.4.0 requests==2.32.3 jinja2==3.1.4 python-multipart==0.0.9 bcrypt==4.0.1 openai==1.14.0 -q
+  %PIP% install fastapi==0.111.0 uvicorn==0.29.0 requests==2.32.3 jinja2==3.1.4 python-multipart==0.0.9 bcrypt==4.0.1 -q
   if errorlevel 1 (
     echo.
     echo ERROR: Could not install required runtime packages.

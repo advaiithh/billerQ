@@ -1,0 +1,60 @@
+{
+    "data": {
+        "lanes":[
+        {
+            "id": "lane1",
+            "title": "Todo (Item only in Working)",
+            "cards": [
+                {
+                    "id": "card1",
+                    "title": "Design Dashboard",
+                    "description": "Envato, australia",
+                    "label": "Medium"                        
+                },
+                {
+                    "id": "card2",
+                    "title": "Test Sidebar",
+                    "description": "Themeforest, australia",
+                    "label": "Low"
+                }
+            ]
+        },
+        {
+            "id": "lane2",
+            "title": "Working",
+            "cards": [
+                {
+                    "id": "card3",
+                    "title": "Test Sidebar",
+                    "description": "Themeforest, australia1",
+                    "label": "Urgent"
+                },
+                {
+                    "id": "card4",
+                    "title": "Test Sidebar",
+                    "description": "Envato, australia",
+                    "label": "Medium"
+                }
+            ]
+        },
+        {
+            "id": "lane3",
+            "title": "Done (Item only in Working)",
+            "cards": [
+                {
+                    "id": "card5",
+                    "title": "Test Sidebar",
+                    "description": "Envato, australia",
+                    "label": "Low"
+                },
+                {
+                    "id": "card6",
+                    "title": "Test Sidebar",
+                    "description": "Themeforest, australia",
+                    "label": "Urgent"
+                }
+            ]
+        }
+    ]
+    }
+}

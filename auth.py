@@ -1,12 +1,17 @@
+import sqlite3
 import hashlib
 import hmac
 import json
 import base64
 import secrets
 from datetime import datetime, timedelta
+from pathlib import Path
 
 from config import SECRET_KEY, SESSION_MAX_DAYS, ADMIN_EMAIL, ADMIN_PASSWORD, ADMIN_COMPANY_ID
-from database import get_connection, get_company_name
+from database import get_company_name
+
+BASE_DIR = Path(__file__).resolve().parent
+DB_FILE = BASE_DIR / "users.db"
 
 
 def _hash_password(password: str) -> str:
@@ -28,23 +33,26 @@ def _verify_password(password: str, stored: str) -> bool:
         return False
 
 
+def get_sqlite_connection():
+    conn = sqlite3.connect(str(DB_FILE))
+    return conn
+
+
 def init_auth_tables():
-    conn = get_connection()
+    conn = get_sqlite_connection()
     cursor = conn.cursor()
     try:
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS bq_app_users (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                email VARCHAR(255) NOT NULL UNIQUE,
-                password_hash VARCHAR(255) NOT NULL,
-                company_id BIGINT UNSIGNED NOT NULL,
-                role ENUM('admin', 'user') NOT NULL DEFAULT 'user',
-                status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'pending',
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT NOT NULL UNIQUE,
+                password_hash TEXT NOT NULL,
+                company_id INTEGER NOT NULL,
+                role TEXT NOT NULL DEFAULT 'user',
+                status TEXT NOT NULL DEFAULT 'pending',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 approved_at TIMESTAMP NULL,
-                approved_by INT NULL,
-                INDEX idx_status (status),
-                INDEX idx_company (company_id)
+                approved_by INTEGER NULL
             )
         """)
         conn.commit()
@@ -54,7 +62,7 @@ def init_auth_tables():
 
 
 def seed_admin_if_needed():
-    conn = get_connection()
+    conn = get_sqlite_connection()
     cursor = conn.cursor()
     try:
         cursor.execute("SELECT COUNT(*) FROM bq_app_users")
@@ -64,9 +72,9 @@ def seed_admin_if_needed():
                 """
                 INSERT INTO bq_app_users
                     (email, password_hash, company_id, role, status, approved_at)
-                VALUES (%s, %s, %s, 'admin', 'approved', NOW())
+                VALUES (?, ?, ?, 'admin', 'approved', CURRENT_TIMESTAMP)
                 """,
-                (ADMIN_EMAIL.lower(), _hash_password(ADMIN_PASSWORD), ADMIN_COMPANY_ID),
+                (ADMIN_EMAIL.lower().strip(), _hash_password(ADMIN_PASSWORD), ADMIN_COMPANY_ID),
             )
             conn.commit()
     finally:
@@ -88,14 +96,14 @@ def _row_to_user(row) -> dict:
 
 
 def get_user_by_email(email: str):
-    conn = get_connection()
+    conn = get_sqlite_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
             """
             SELECT id, email, company_id, role, status, created_at, approved_at
             FROM bq_app_users
-            WHERE email = %s
+            WHERE LOWER(email) = ?
             """,
             (email.lower().strip(),),
         )
@@ -107,14 +115,14 @@ def get_user_by_email(email: str):
 
 
 def get_user_by_id(user_id: int):
-    conn = get_connection()
+    conn = get_sqlite_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
             """
             SELECT id, email, company_id, role, status, created_at, approved_at
             FROM bq_app_users
-            WHERE id = %s
+            WHERE id = ?
             """,
             (user_id,),
         )
@@ -126,11 +134,11 @@ def get_user_by_id(user_id: int):
 
 
 def get_password_hash(email: str) -> str | None:
-    conn = get_connection()
+    conn = get_sqlite_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "SELECT password_hash FROM bq_app_users WHERE email = %s",
+            "SELECT password_hash FROM bq_app_users WHERE LOWER(email) = ?",
             (email.lower().strip(),),
         )
         row = cursor.fetchone()
@@ -145,21 +153,21 @@ def create_user(email: str, password: str, company_id: int) -> dict:
     if len(password) < 6:
         raise ValueError("Password must be at least 6 characters")
 
-    conn = get_connection()
+    conn = get_sqlite_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
             """
             INSERT INTO bq_app_users (email, password_hash, company_id, role, status)
-            VALUES (%s, %s, %s, 'user', 'pending')
+            VALUES (?, ?, ?, 'user', 'pending')
             """,
             (email, _hash_password(password), company_id),
         )
         conn.commit()
         user_id = cursor.lastrowid
+    except sqlite3.IntegrityError:
+        raise ValueError("An account with this email already exists")
     except Exception as e:
-        if "Duplicate" in str(e):
-            raise ValueError("An account with this email already exists")
         raise
     finally:
         cursor.close()
@@ -231,15 +239,14 @@ def verify_session_token(token: str) -> dict | None:
 
 
 def list_pending_users():
-    conn = get_connection()
+    conn = get_sqlite_connection()
     cursor = conn.cursor()
     try:
         cursor.execute("""
-            SELECT u.id, u.email, u.company_id, c.name, u.created_at
-            FROM bq_app_users u
-            LEFT JOIN companies c ON c.id = u.company_id
-            WHERE u.status = 'pending'
-            ORDER BY u.created_at ASC
+            SELECT id, email, company_id, created_at
+            FROM bq_app_users
+            WHERE status = 'pending'
+            ORDER BY created_at ASC
         """)
         rows = cursor.fetchall()
         return [
@@ -247,8 +254,8 @@ def list_pending_users():
                 "id": r[0],
                 "email": r[1],
                 "company_id": r[2],
-                "company_name": r[3] or "Unknown",
-                "created_at": str(r[4]) if r[4] else None,
+                "company_name": get_company_name(r[2]),
+                "created_at": str(r[3]) if r[3] else None,
             }
             for r in rows
         ]
@@ -258,14 +265,14 @@ def list_pending_users():
 
 
 def approve_user(user_id: int, admin_id: int):
-    conn = get_connection()
+    conn = get_sqlite_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
             """
             UPDATE bq_app_users
-            SET status = 'approved', approved_at = NOW(), approved_by = %s
-            WHERE id = %s AND status = 'pending'
+            SET status = 'approved', approved_at = datetime('now'), approved_by = ?
+            WHERE id = ? AND status = 'pending'
             """,
             (admin_id, user_id),
         )
@@ -278,14 +285,14 @@ def approve_user(user_id: int, admin_id: int):
 
 
 def reject_user(user_id: int, admin_id: int):
-    conn = get_connection()
+    conn = get_sqlite_connection()
     cursor = conn.cursor()
     try:
         cursor.execute(
             """
             UPDATE bq_app_users
-            SET status = 'rejected', approved_at = NOW(), approved_by = %s
-            WHERE id = %s AND status = 'pending'
+            SET status = 'rejected', approved_at = datetime('now'), approved_by = ?
+            WHERE id = ? AND status = 'pending'
             """,
             (admin_id, user_id),
         )

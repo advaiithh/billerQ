@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BillerQ Feature Guide</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-color: #0b0f17;
+      --card-bg: rgba(22, 30, 49, 0.7);
+      --card-border: rgba(56, 139, 253, 0.2);
+      --accent-color: #388bfd;
+      --success-color: #1d9e75;
+      --text-color: #c9d1d9;
+      --title-color: #ffffff;
+      --muted-color: #7d8590;
+      --header-bg: #161b22;
+      --nav-bg: #1a202c;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-color);
+      color: var(--text-color);
+      line-height: 1.6;
+      padding-bottom: 60px;
+    }
+
+    header {
+      background: var(--header-bg);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 24px 5%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(12px);
+    }
+
+    .logo-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .logo-badge {
+      width: 40px;
+      height: 40px;
+      background: var(--success-color);
+      color: #fff;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 18px;
+    }
+
+    .logo-text {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 700;
+      font-size: 22px;
+      color: var(--title-color);
+    }
+
+    .back-btn {
+      color: var(--accent-color);
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border: 1px solid var(--card-border);
+      padding: 8px 16px;
+      border-radius: 20px;
+      transition: all 0.2s ease;
+      background: rgba(56, 139, 253, 0.05);
+    }
+
+    .back-btn:hover {
+      background: rgba(56, 139, 253, 0.15);
+      border-color: var(--accent-color);
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 24px;
+    }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 36px;
+      font-weight: 800;
+      color: var(--title-color);
+      margin-bottom: 12px;
+      background: linear-gradient(90deg, #58a6ff, #3fb950);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: var(--muted-color);
+      margin-bottom: 40px;
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+
+    .feature-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 24px;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: var(--accent-color);
+      opacity: 0.8;
+    }
+
+    .feature-card.billing::before {
+      background: var(--success-color);
+    }
+
+    .feature-card.customers::before {
+      background: #a371f7;
+    }
+
+    .feature-card.complaints::before {
+      background: #f85149;
+    }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4), 0 0 1px 1px var(--accent-color);
+      border-color: rgba(56, 139, 253, 0.4);
+    }
+
+    .feature-icon {
+      font-size: 28px;
+      margin-bottom: 16px;
+    }
+
+    .feature-title {
+      font-family: 'Outfit', sans-serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--title-color);
+      margin-bottom: 12px;
+    }
+
+    .feature-desc {
+      font-size: 14px;
+      color: var(--text-color);
+      margin-bottom: 20px;
+      flex-grow: 1;
+    }
+
+    .query-box {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+      padding: 14px;
+      border: 1px dashed rgba(255, 255, 255, 0.08);
+    }
+
+    .query-title {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--muted-color);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .query-item {
+      font-family: monospace;
+      font-size: 12.5px;
+      color: #58a6ff;
+      margin-bottom: 6px;
+      cursor: pointer;
+      display: block;
+    }
+
+    .query-item:hover {
+      text-decoration: underline;
+    }
+
+    .query-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .guide-banner {
+      background: linear-gradient(135deg, rgba(29, 158, 117, 0.1) 0%, rgba(56, 139, 253, 0.1) 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    .banner-text h3 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 20px;
+      color: var(--title-color);
+      margin-bottom: 8px;
+    }
+
+    .banner-text p {
+      font-size: 14px;
+      color: var(--text-color);
+    }
+
+    .banner-btn {
+      background: var(--success-color);
+      color: #fff;
+      border: none;
+      padding: 12px 24px;
+      font-size: 14px;
+      font-weight: 600;
+      border-radius: 30px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .banner-btn:hover {
+      background: #17856a;
+    }
+
+    @media (max-width: 768px) {
+      .features-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-container">
+    <div class="logo-badge">BQ</div>
+    <div class="logo-text">BillerQ User Guide</div>
+  </div>
+  <a href="/" class="back-btn">&#8592; Back to Dashboard</a>
+</header>
+
+<div class="container">
+  <div class="guide-banner">
+    <div class="banner-text">
+      <h3>Need instant business details?</h3>
+      <p>The BillerQ Business Copilot chatbot is now active on your dashboard. Click the BillerQ logo in the bottom right corner to begin chatting!</p>
+    </div>
+    <button class="banner-btn" onclick="window.history.back();">Open Dashboard</button>
+  </div>
+
+  <h1>BillerQ Core Features</h1>
+  <p class="subtitle">A guide to the primary business modules available inside BillerQ Subscriber Management.</p>
+
+  <div class="features-grid">
+    <!-- Dashboard -->
+    <div class="feature-card">
+      <div class="feature-icon">&#128202;</div>
+      <h3 class="feature-title">Realtime Dashboard</h3>
+      <p class="feature-desc">Displays essential metrics including the Revenue Meter (Invoice vs. Due vs. Collections), Connection counts by subscriber type (Cable TV, Broadband, IPTV), and Monthly Overview metrics.</p>
+      <div class="query-box">
+        <div class="query-title">Ask the Copilot</div>
+        <span class="query-item">"what is today's collection?"</span>
+        <span class="query-item">"show active broadband subscribers"</span>
+      </div>
+    </div>
+
+    <!-- Billing & Subscriptions -->
+    <div class="feature-card billing">
+      <div class="feature-icon">&#128181;</div>
+      <h3 class="feature-title">Billing & Subscriptions</h3>
+      <p class="feature-desc">Handles plan activations, invoice generation, overdue list tracking, cancelation, and automated recurring billing status for subscribers.</p>
+      <div class="query-box">
+        <div class="query-title">Ask the Copilot</div>
+        <span class="query-item">"who has pending payments?"</span>
+        <span class="query-item">"which customers paid 210 dollars today?"</span>
+      </div>
+    </div>
+
+    <!-- Customer CRM -->
+    <div class="feature-card customers">
+      <div class="feature-icon">&#128100;</div>
+      <h3 class="feature-title">Customer Manager</h3>
+      <p class="feature-desc">View subscriber records, manage profiles, search by name, phone number, or location, and track status parameters (active, inactive, suspended, archive).</p>
+      <div class="query-box">
+        <div class="query-title">Ask the Copilot</div>
+        <span class="query-item">"show inactive customers"</span>
+        <span class="query-item">"details of Ram Jacob"</span>
+      </div>
+    </div>
+
+    <!-- Complaint Desk -->
+    <div class="feature-card complaints">
+      <div class="feature-icon">&#128736;</div>
+      <h3 class="feature-title">Complaint Desk</h3>
+      <p class="feature-desc">Submit and resolve technical complaints, assign service tickets, check ticket status, and summarize pending technical issues.</p>
+      <div class="query-box">
+        <div class="query-title">Ask the Copilot</div>
+        <span class="query-item">"how many open complaints do we have?"</span>
+        <span class="query-item">"give me complaint summary"</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

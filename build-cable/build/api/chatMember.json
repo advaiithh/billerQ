@@ -1,0 +1,101 @@
+[
+    {
+        "id": 0,
+        "name": "Mark Jenco",
+        "thumb": "user/12.png",
+        "status": "Status...",
+        "lastSeenDate": "0",
+        "online": true,
+        "typing": true,
+        "time": " 5 May, 4:30 PM",
+        "reply": "fa fa-reply font-danger"
+    },
+    {
+        "id": 1,
+        "name": "Vincent Porter",
+        "thumb": "user/1.jpg",
+        "status": "  Hello Name",
+        "lastSeenDate": "Last seen today 15:24",
+        "online": false,
+        "typing": false,
+        "time": " 8 May, 5:30 PM",
+        "reply": "fa fa-reply font-success"
+    },
+    {
+        "id": 2,
+        "name": "Aiden Chavez",
+        "thumb": "user/2.png",
+        "status": "  Out is my favorite.",
+        "lastSeenDate": "Last seen today 13:24",
+        "online": true,
+        "typing": false,
+        "time": " 5 June, 6:30 PM",
+        "reply": "fa fa-reply font-success"
+    },
+    {
+        "id": 3,
+        "name": "Prasanth Anand",
+        "thumb": "user/8.jpg",
+        "status": "Change for anyone.",
+        "lastSeenDate": "Last seen today 13:24",
+        "online": true,
+        "typing": false,
+        "time": " 4 Aug, 6:00 PM",
+        "reply": "fa fa-reply font-success"
+    },
+    {
+        "id": 4,
+        "name": "Venkata Satyamu",
+        "thumb": "user/4.jpg",
+        "status": "  First bun like a sun.",
+        "lastSeenDate": "Last seen today 12:10",
+        "online": false,
+        "typing": false,
+        "time": " 8 Dec, 7:18 PM",
+        "reply": "fa fa-reply font-success"
+    },
+    {
+        "id": 5,
+        "name": "Ginger Johnston",
+        "thumb": "user/5.jpg",
+        "status": "  it's my life. Mind it.",
+        "lastSeenDate": "Last seen today 22:24",
+        "online": true,
+        "typing": false,
+        "time": " 15 Nov, 7:38 PM",
+        "reply": "fa fa-reply font-danger"
+    },
+    {
+        "id": 6,
+        "name": "Kori Thomas",
+        "thumb": "user/8.jpg",
+        "status": "  Change for anyone.",
+        "lastSeenDate": "Last seen today 00:24",
+        "online": false,
+        "typing": true,
+        "time": " 6 Mar, 8:40 PM",
+        "reply": "fa fa-reply font-success"
+    },
+    {
+        "id": 7,
+        "name": "Vincent Porter",
+        "thumb": "user/1.jpg",
+        "status": "  Hello Name",
+        "lastSeenDate": "Last seen yesterday 06:47",
+        "online": true,
+        "typing": false,
+        "time": " 9 Jan, 8:50 PM",
+        "reply": "fa fa-reply font-danger"
+    },
+    {
+        "id": 8,
+        "name": "Kori Thomas",
+        "thumb": "user/8.jpg",
+        "status": "  Change for anyone.",
+        "lastSeenDate": "Last seen yesterday 20:07",
+        "online": true,
+        "typing": true,
+        "time": " 1 Feb, 9:00 PM",
+        "reply": "fa fa-reply font-danger"
+    }    
+]

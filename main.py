@@ -1,8 +1,11 @@
+import re
+import time
 from pathlib import Path
 
 from fastapi import FastAPI, Request, Depends, Response
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
 from ai import (
@@ -29,9 +32,7 @@ from query_logging import init_query_logging_table, log_payload, log_query
 from report_store import get_report, render_report_html, safe_result, store_report
 
 import database
-import re
-import time
-from database import run_query, get_connection, get_companies, get_company_name, resolve_query_company_scope
+from database import run_query, get_companies, get_company_name, resolve_query_company_scope
 from auth import (
     init_auth_tables,
     seed_admin_if_needed,
@@ -48,13 +49,21 @@ BASE_DIR = Path(__file__).resolve().parent
 
 app = FastAPI(title="BillerQ AI Assistant")
 
-STATIC_DIR = BASE_DIR / "static"
-if STATIC_DIR.is_dir():
-    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
-
-
-def _login_html() -> str:
-    return (BASE_DIR / "templates" / "login.html").read_text(encoding="utf-8-sig")
+# CORS middleware for cross-origin chatbot widget calls (e.g. Live Server)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=[
+        "http://localhost:5500",
+        "http://127.0.0.1:5500",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8000"
+    ],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 SESSION_COOKIE = "bq_session"
 
@@ -130,10 +139,6 @@ def _build_payload_from_cached_rows(
     rows: list,
     matched_by: str,
 ) -> dict:
-    """
-    Build a chat payload from a filtered result (served from the session cache
-    without re-hitting the database).
-    """
     row_count = len(rows)
     narrative, extra_insights = build_narrative(
         effective_msg, None, scope_label, table, columns, rows, row_count,
@@ -168,7 +173,6 @@ def _build_payload_from_cached_rows(
     }
 
 
-
 def _set_session(response: Response, user: dict):
     token = create_session_token(user)
     response.set_cookie(
@@ -184,20 +188,38 @@ def _clear_session(response: Response):
     response.delete_cookie(SESSION_COOKIE)
 
 
+# ---------------------------------------------------
+# FRONTEND ROUTING - React Dashboard First
+# ---------------------------------------------------
+
+def _get_build_index_html() -> str:
+    path = BASE_DIR / "build-cable" / "build" / "index.html"
+    if not path.is_file():
+        path = Path("C:/Users/Lenovo/Downloads/build-cable/build/index.html")
+    if path.is_file():
+        return path.read_text(encoding="utf-8")
+    return "<h3>React build index.html not found. Please place it in build-cable/build/</h3>"
+
+
 @app.get("/", response_class=HTMLResponse)
 @app.get("/login", response_class=HTMLResponse)
 @app.get("/signup", response_class=HTMLResponse)
-async def login_page(request: Request):
-    if get_current_user(request):
-        return RedirectResponse(url="/app", status_code=302)
-    return HTMLResponse(content=_login_html())
-
-
 @app.get("/app", response_class=HTMLResponse)
-async def app_page(request: Request):
+async def serve_dashboard(request: Request):
+    return HTMLResponse(content=_get_build_index_html())
+
+
+@app.get("/legacy-chat", response_class=HTMLResponse)
+async def legacy_chat(request: Request):
     if not get_current_user(request):
         return RedirectResponse(url="/", status_code=302)
     html_file = BASE_DIR / "templates" / "index.html"
+    return HTMLResponse(content=html_file.read_text(encoding="utf-8"))
+
+
+@app.get("/guide", response_class=HTMLResponse)
+async def guide_page(request: Request):
+    html_file = BASE_DIR / "templates" / "guide.html"
     return HTMLResponse(content=html_file.read_text(encoding="utf-8"))
 
 
@@ -213,6 +235,111 @@ async def report_page(report_id: str, request: Request):
         return HTMLResponse(content="You do not have access to this report.", status_code=403)
     return HTMLResponse(content=render_report_html(report))
 
+
+# ---------------------------------------------------
+# DASHBOARD MOCK API ENDPOINTS
+# ---------------------------------------------------
+
+@app.get("/admin/get-invoice-amount")
+@app.get("/get-invoice-amount")
+async def get_invoice_amount():
+    return {
+        "success": True,
+        "invoice": 25842.00,
+        "due": 25842.00,
+        "collection": 17.80,
+        "percentage": 0.07
+    }
+
+
+@app.get("/admin/get-connection-data")
+@app.get("/get-connection-data")
+async def get_connection_data():
+    return {
+        "success": True,
+        "cable": 7,
+        "broadband": 2,
+        "iptv": 0
+    }
+
+
+@app.get("/admin/get-customer-status-wise-count")
+@app.get("/get-customer-status-wise-count")
+async def get_customer_status_wise_count():
+    return {
+        "success": True,
+        "active": 5,
+        "inactive": 1,
+        "total": 6
+    }
+
+
+@app.get("/admin/get-recent-payment")
+@app.get("/get-recent-payment")
+async def get_recent_payment():
+    return {
+        "success": True,
+        "data": {
+            "data": [
+                {"id": 1, "name": "Ram Jacob", "amount": 3500.0, "payment_date": "2026-06-11"},
+                {"id": 2, "name": "John Deo", "amount": 2400.0, "payment_date": "2026-06-10"},
+                {"id": 3, "name": "Elana John", "amount": 2560.0, "payment_date": "2026-06-09"}
+            ]
+        }
+    }
+
+
+@app.get("/admin/get-recent-order")
+@app.get("/get-recent-order")
+async def get_recent_order():
+    return {
+        "success": True,
+        "data": {
+            "data": [
+                {"id": 1, "product": "Broadband Plan - Developer", "price": "210$", "prdouctstatus": "Processing"},
+                {"id": 2, "product": "Broadband Plan - Designer", "price": "210$", "prdouctstatus": "Shipped"}
+            ]
+        }
+    }
+
+
+@app.get("/admin/stb-status-count")
+@app.get("/stb-status-count")
+async def stb_status_count():
+    return {
+        "success": True,
+        "active": 7,
+        "inactive": 2
+    }
+
+
+@app.get("/admin/complaint-status-count")
+async def complaint_status_count():
+    return {
+        "success": True,
+        "open": 4,
+        "resolved": 3
+    }
+
+
+@app.get("/admin/get-header")
+async def get_header():
+    return {"success": True, "header": "BillerQ Admin"}
+
+
+@app.get("/admin/get-company-data")
+async def get_company_data():
+    return {"success": True, "data": {"name": "QLO"}}
+
+
+@app.get("/admin/get-user-profile-counts")
+async def get_user_profile_counts():
+    return {"success": True, "counts": {"active_customers": 5, "due_payments": 2}}
+
+
+# ---------------------------------------------------
+# AUTH ENDPOINTS
+# ---------------------------------------------------
 
 @app.get("/companies")
 async def list_companies():
@@ -334,6 +461,10 @@ async def admin_reject(body: UserActionRequest, request: Request):
         return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
 
+# ---------------------------------------------------
+# CHAT API ENDPOINT
+# ---------------------------------------------------
+
 @app.post("/chat")
 async def chat(body: ChatRequest, request: Request):
     started_at = time.perf_counter()
@@ -388,8 +519,6 @@ async def chat(body: ChatRequest, request: Request):
                 )
                 return payload
 
-        # Try the session result cache first: if the previous query's rows can
-        # satisfy the follow-up, return them without re-hitting the database.
         cached = try_filter_from_cache(session_id, user_msg)
         if cached:
             payload = _build_payload_from_cached_rows(
@@ -418,7 +547,6 @@ async def chat(body: ChatRequest, request: Request):
             explanation = (
                 "Dashboard-first routing selected an existing business service before SQL generation."
             )
-
             if used_memory:
                 explanation += f" Context applied from the previous turn: {effective_msg}"
             payload = {
@@ -480,14 +608,12 @@ async def chat(body: ChatRequest, request: Request):
         method = ai_result.get("method", "rules")
         table = ai_result.get("table", "customers")
 
-        # If the user asked for names only, rewrite the SQL to project name columns
         names_only = _wants_names_only(effective_msg)
         if names_only and sql.upper().lstrip().startswith("SELECT"):
             sql = _project_names_only(sql, table)
 
         db_result = run_query(sql)
 
-        # Retry with AI only for non-chip list queries that returned nothing
         q_lower = effective_msg.lower().strip()
         if (
             db_result["row_count"] == 0
@@ -521,10 +647,8 @@ async def chat(body: ChatRequest, request: Request):
             row_count,
         )
 
-        # Build the immediate names list for fast display (when applicable)
         names_list: list[str] = []
         if names_only and row_count > 0:
-            # Take the first column of every row, dedupe, drop empties
             seen: set[str] = set()
             for r in db_result["rows"]:
                 if not r:
@@ -538,8 +662,6 @@ async def chat(body: ChatRequest, request: Request):
                 seen.add(key)
                 names_list.append(value)
 
-        # If the user wants names, replace the narrative with a names-list bullet
-        # list so the user sees the names immediately without opening a report.
         if names_only and names_list:
             display = names_list[:50]
             extra = max(len(names_list) - len(display), 0)
@@ -578,15 +700,11 @@ async def chat(body: ChatRequest, request: Request):
             "method": method,
             "service_used": "Database Query",
             "route": "database_query",
-            # ALWAYS defer the full report — user clicks "View Detailed Report"
-            # to see columns/rows. The narrative already shows a quick summary
-            # (and names, when applicable) so the response is immediately useful.
             "detail_mode": "collapsed",
             "names_only": names_only,
             "names_list": names_list[:50] if names_only else [],
         }
-        # Save the result rows in the session cache so follow-ups (status filter,
-        # name lookup, repeat prompt) can be answered without a new DB call.
+
         if row_count > 0 and db_result.get("columns"):
             remember_result(
                 session_id,
@@ -608,7 +726,6 @@ async def chat(body: ChatRequest, request: Request):
         return payload
 
     except Exception as e:
-
         log_query(
             user=user,
             user_query=user_msg,
@@ -629,24 +746,23 @@ async def clear_cache(request: Request):
     if not admin:
         return JSONResponse({"success": False, "error": "Admin access required"}, status_code=403)
     try:
-        database._SCHEMA_CACHE = None
-        database._SCHEMA_CACHE_TIME = 0
-        database._COLUMNS_CACHE = None
-        database._COLUMNS_CACHE_TIME = 0
-        database._BUSINESS_CONTEXT_CACHE = None
-        database._BUSINESS_CONTEXT_CACHE_TIME = 0
-        database._COMPANIES_LIST_CACHE = None
-        database._COMPANIES_LIST_CACHE_TIME = 0
-        return {"success": True, "message": "Cache cleared successfully"}
+        database._MOCK_DATA = {}
+        return {"success": True, "message": "Mock database cache cleared"}
     except Exception as e:
         return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 
 
 @app.get("/health")
 async def health():
-    try:
-        conn = get_connection()
-        conn.close()
-        return {"status": "ok", "database": "connected", "model": OLLAMA_MODEL}
-    except Exception as e:
-        return JSONResponse({"status": "error", "detail": str(e)}, status_code=500)
+    return {"status": "ok", "database": "local-json-mocked", "model": OLLAMA_MODEL}
+
+
+# ---------------------------------------------------
+# FALLBACK: Serve static build assets
+# ---------------------------------------------------
+build_dir = BASE_DIR / "build-cable" / "build"
+if not build_dir.is_dir():
+    build_dir = Path("C:/Users/Lenovo/Downloads/build-cable/build")
+
+if build_dir.is_dir():
+    app.mount("/", StaticFiles(directory=str(build_dir), html=True), name="build")

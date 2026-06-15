@@ -1,10 +1,6 @@
 fastapi==0.111.0
 uvicorn==0.29.0
-mysql-connector-python==8.4.0
 requests==2.32.3
 jinja2==3.1.4
 python-multipart==0.0.9
-langchain==0.1.14
-langchain-community==0.0.38
 bcrypt==4.0.1
-openai==1.14.0

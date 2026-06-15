@@ -1,8 +1,8 @@
 # BillerQ AI Assistant
 
-A **read-only**, AI-assisted chat interface for exploring BillerQ billing data stored in **MySQL**. Users log in, ask questions in plain English, and receive SQL-backed tables with plain-English summaries — scoped to their company.
+A **read-only**, AI-assisted chat interface for exploring BillerQ billing data stored in **MySQL**. Users log in, ask questions in plain English, and receive SQL-backed tables with plain-English summaries — scoped to their company. A floating **Copilot widget** embedded in the dashboard answers KPI questions from live API data and forwards all other questions to the AI backend.
 
-**Stack:** FastAPI · MySQL · Ollama (Qwen 2.5 7B) · Jinja2 · LangChain (memory buffer)
+**Stack:** FastAPI · MySQL · Ollama (Qwen 2.5 7B) · React (build) · LangChain (memory buffer)
 
 ---
 
@@ -24,15 +24,16 @@ A **read-only**, AI-assisted chat interface for exploring BillerQ billing data s
 14. [Running queries safely](#running-queries-safely)
 15. [Summaries & plain-English narratives](#summaries--plain-english-narratives)
 16. [Frontend (what users see)](#frontend-what-users-see)
-17. [Caching & performance](#caching--performance)
-18. [Ollama / model — how it fits in](#ollama--model--how-it-fits-in)
-19. [Setup (local)](#setup-local)
-20. [Hosting as a public website](#hosting-as-a-public-website)
-21. [API reference](#api-reference)
-22. [Example walkthroughs](#example-walkthroughs)
-23. [Security model](#security-model)
-24. [Troubleshooting](#troubleshooting)
-25. [Configuration reference](#configuration-reference)
+17. [**Chatbot Copilot widget — how it works**](#chatbot-copilot-widget--how-it-works)
+18. [Caching & performance](#caching--performance)
+19. [Ollama / model — how it fits in](#ollama--model--how-it-fits-in)
+20. [Setup (local)](#setup-local)
+21. [Hosting as a public website](#hosting-as-a-public-website)
+22. [API reference](#api-reference)
+23. [Example walkthroughs](#example-walkthroughs)
+24. [Security model](#security-model)
+25. [Troubleshooting](#troubleshooting)
+26. [Configuration reference](#configuration-reference)
 
 ---
 
@@ -1009,6 +1010,246 @@ ADMIN_COMPANY_ID
 | Add-ons | `customer_add_ons` |
 | STBs / devices | `stbs` |
 | Expenses / incomes | `expenses`, `incomes` |
+
+---
+
+## Chatbot Copilot widget — how it works
+
+The floating **BillerQ Copilot** button lives in `build-cable/build/index.html` and is injected into the React single-page app shell that serves **every route** (`/`, `/login`, `/signup`, `/app`). Because the same HTML file is served for all routes, careful auth-gating is needed so the chatbot only appears **after the user has signed in**.
+
+---
+
+### 1 — Why the widget is hidden before login
+
+The floating button (`#bq-chatbot-btn`) is rendered with `display: none` in CSS from the very first paint. A JavaScript function `bqInitAuth()` is registered on `window.load` and calls `GET /auth/me` with the session cookie.
+
+```
+Page loads (any route: /, /login, /signup, /app)
+  ↓
+bqInitAuth()  →  GET /auth/me  (sends bq_session cookie)
+  ↓
+401 Not authenticated          → button stays hidden (display:none)
+  ↓ OR
+200 { success: true, user: … } → button.style.display = 'flex'  ← visible
+                                → header label set to company or 'Admin · all companies'
+                                → bqLoadDashboardData() called in background
+```
+
+**Result:** The copilot button is **invisible on the login and signup screens**. It only appears when a valid, approved session cookie exists — i.e. after a successful login redirect to `/app`.
+
+---
+
+### 2 — Opening the chat and the welcome message
+
+Clicking the floating button calls `bqToggleChat()`, which adds/removes the `.open` class on `#bq-chatbot-box`.
+
+- On the **first open**, a welcome message is injected into the chat body:
+  - Greets the user by their email prefix
+  - States which company's data is in scope (or "all companies" for admin)
+- On subsequent opens (or re-opens), the existing chat history is preserved
+- Dashboard data is **refreshed** every time the chat is opened via `bqLoadDashboardData()`
+
+---
+
+### 3 — Loading live dashboard data
+
+`bqLoadDashboardData()` runs immediately after auth is confirmed and again on every chat open. It fetches **the same API endpoints the React dashboard uses** in parallel:
+
+| Key stored | API endpoint | Data returned |
+|------------|-------------|---------------|
+| `invoice` | `GET /get-invoice-amount` | `{ invoice, due, collection, percentage }` |
+| `connections` | `GET /get-connection-data` | `{ cable, broadband, iptv }` |
+| `customerStatus` | `GET /get-customer-status-wise-count` | `{ active, inactive, total }` |
+| `recentPayments` | `GET /get-recent-payment` | Array of `{ name, amount, payment_date }` |
+| `recentOrders` | `GET /get-recent-order` | Array of `{ product, price, prdouctstatus }` |
+| `stbStatus` | `GET /stb-status-count` | `{ active, inactive }` |
+
+All results are stored in the `bqDashboardData` object in memory. The fetches use `Promise.allSettled` so a single failing endpoint never breaks the others.
+
+---
+
+### 4 — The two-path response system
+
+Every message the user sends goes through **two decision layers** before a response is shown:
+
+```
+User types message → bqSendText(text)
+         │
+         ▼
+ ┌───────────────────────────────────────────────┐
+ │ Step 1: bqCheckDashboardIntent(text)          │
+ │                                               │
+ │ Regex-matches the user's text against         │
+ │ dashboard KPI topics:                         │
+ │   invoice / collection / amount               │
+ │   connection / cable / broadband / iptv       │
+ │   customer count (non-list question)          │
+ │   stb / set-top-box                           │
+ │   recent payment / recent order               │
+ │   dashboard / summary / overview / snapshot   │
+ │                                               │
+ │ If MATCHED → return pre-built HTML from       │
+ │ bqDashboardData (no network call needed)      │
+ └───────────┬───────────────────────────────────┘
+             │ not matched
+             ▼
+ ┌───────────────────────────────────────────────┐
+ │ Step 2: POST /chat  { message: text }         │
+ │                                               │
+ │ Full BillerQ AI pipeline:                     │
+ │   intent classify → SQL → run_query           │
+ │   → narrative/summary → JSON response         │
+ │                                               │
+ │ Widget renders narrative + mini data table    │
+ └───────────────────────────────────────────────┘
+```
+
+#### Path 1 — Dashboard API (fast, no AI)
+
+When `bqCheckDashboardIntent` matches, the chatbot shows a **stat card grid** or **mini table** built directly from `bqDashboardData`. This path:
+- Responds in ~400 ms (artificial typing delay for UX)
+- Uses no Ollama, no SQL
+- Always shows current numbers (data was fetched on open)
+
+Example triggers:
+| User types | Response source |
+|---|---|
+| `What is today's collection?` | `bqDashboardData.invoice` |
+| `Show connection summary` | `bqDashboardData.connections` |
+| `How many active customers?` | `bqDashboardData.customerStatus` |
+| `Recent payments` | `bqDashboardData.recentPayments` table |
+| `Show dashboard summary` | All KPIs combined in a grid |
+
+#### Path 2 — BillerQ AI `/chat` (full pipeline)
+
+When the intent doesn't match a dashboard KPI, the message is forwarded to `POST /chat` — the same FastAPI endpoint the full chat UI uses. The widget then renders:
+- **`d.narrative`** — plain-English paragraph (or `d.summary` as fallback)
+- **Mini data table** — first 5 rows × first 4 columns from `d.rows` / `d.columns`
+- **Row count notice** if there are more than 5 rows
+- Error / blocked messages if the AI returned those
+
+If the server returns a 401 "Please log in" error (session expired), the widget hides itself and removes the button automatically.
+
+---
+
+### 5 — Dashboard intent regex patterns
+
+`bqCheckDashboardIntent` uses these regex patterns (case-insensitive):
+
+| Topic | Regex | Excludes |
+|-------|-------|----------|
+| Invoice/Collection | `/invoice|collection|amount|due|revenue|billing/` | — |
+| Connections | `/connection|cable|broadband|iptv/` | `/show all|list|display/` (those go to AI) |
+| Customer count | `/how many customer|customer count|customer status/` | `/show|list/` |
+| STB | `/stb|set.top.box/` | — |
+| Recent payments | `/recent payment|latest payment/` | — |
+| Recent orders | `/recent order|latest order/` | — |
+| Full summary | `/dashboard|summary|overview|snapshot/` | — |
+
+If the message passes all exclusions and data exists in `bqDashboardData`, an HTML string is returned. If the API data for that topic was not loaded (fetch failed), `null` is returned and the message falls through to `/chat`.
+
+---
+
+### 6 — HTML rendering helpers
+
+| Function | Output |
+|----------|--------|
+| `bqStatGrid(title, stats[])` | 2-column CSS grid of stat cards with label + value + optional sub-label |
+| `bqMiniTable(title, cols, rows, note)` | Compact scrollable table with column headers |
+| `bqFullSummary()` | Combined grid: invoice total + collection + customers + connections + STBs |
+| `bqFmt(number)` | `toLocaleString('en-IN', {minimumFractionDigits:2})` — Indian number format |
+| `bqEsc(string)` | HTML-escapes `&`, `<`, `>` — used for AI text output |
+| `bqAddRaw(html, isUser)` | Appends a bubble with raw HTML (dashboard cards) |
+| `bqAddMsg(text, isUser, data)` | Appends a bubble with escaped text + optional mini table (AI results) |
+
+---
+
+### 7 — Quick-action chips
+
+Six chips are shown at the bottom of the widget. Each calls `bqSendText(text)` with a pre-written message:
+
+| Chip label | Message sent | Goes to |
+|---|---|---|
+| Dashboard summary | `Show dashboard summary` | Dashboard API (full KPI grid) |
+| Pending payments | `Who has pending payments?` | AI `/chat` |
+| Broadband | `Show active broadband subscribers` | AI `/chat` |
+| All customers | `Show all customers` | AI `/chat` (chip fast-path) |
+| Inactive customers | `Inactive customers` | AI `/chat` (chip fast-path) |
+| Recent payments | `Recent payments` | Dashboard API (payment table) |
+
+---
+
+### 8 — Complete data flow diagram
+
+```
+ Browser (any page)
+     │
+     │  window.load
+     ▼
+ bqInitAuth()
+     │  GET /auth/me  (cookie: bq_session)
+     │
+     ├── 401 Not auth ──────→  button hidden (login/signup page)
+     │
+     └── 200 OK (user data)
+           │
+           ├── Show #bq-chatbot-btn (display: flex)
+           ├── Set header label  (company name or 'Admin · all companies')
+           └── bqLoadDashboardData()  ← runs in background
+                 │
+                 │  6 parallel fetches (Promise.allSettled)
+                 ├── GET /get-invoice-amount        → bqDashboardData.invoice
+                 ├── GET /get-connection-data       → bqDashboardData.connections
+                 ├── GET /get-customer-status-wise-count → bqDashboardData.customerStatus
+                 ├── GET /get-recent-payment        → bqDashboardData.recentPayments
+                 ├── GET /get-recent-order          → bqDashboardData.recentOrders
+                 └── GET /stb-status-count          → bqDashboardData.stbStatus
+
+ User clicks button → bqToggleChat()
+     │
+     ├── First open: inject welcome message, refresh dashboard data
+     └── Subsequent: history preserved, refresh data
+
+ User sends message → bqSendText(text)
+     │
+     ├── bqCheckDashboardIntent(text)
+     │     │
+     │     ├── MATCH (KPI question)
+     │     │     └── bqAddRaw(bqStatGrid / bqMiniTable / bqFullSummary)
+     │     │         ← No network call, instant response
+     │     │
+     │     └── NO MATCH
+     │           └── POST /chat  { message: text }
+     │                 │  FastAPI pipeline:
+     │                 │    1. require_user() — session check
+     │                 │    2. resolve_query_company_scope()
+     │                 │    3. classify_intent() in ai.py
+     │                 │    4. route_business_query() OR natural_language_to_sql()
+     │                 │    5. run_query() on MySQL
+     │                 │    6. build_narrative()
+     │                 │    7. Return JSON payload
+     │                 │
+     │                 └── Widget renders:
+     │                       narrative / summary text
+     │                       mini table (first 5 rows × 4 cols)
+     │                       row count notice if >5 rows
+     │
+     └── Session expired (401) → hide widget + button
+```
+
+---
+
+### 9 — Where the code lives
+
+| Element | File | Lines |
+|---------|------|-------|
+| Widget HTML + CSS + JS | `build-cable/build/index.html` | Everything after `<div id="root">` |
+| Auth-gate (`bqInitAuth`) | `build-cable/build/index.html` | `window.addEventListener('load', bqInitAuth)` |
+| Dashboard API loader (`bqLoadDashboardData`) | `build-cable/build/index.html` | Fetches 6 endpoints in parallel |
+| Intent matcher (`bqCheckDashboardIntent`) | `build-cable/build/index.html` | Regex switches on `bqDashboardData` |
+| AI backend (`/chat`) | `main.py` lines 468–740 | Full NL→SQL pipeline |
+| Dashboard API endpoints | `main.py` lines 243–337 | `GET /get-invoice-amount`, etc. |
+| AI intent + SQL | `ai.py` | `classify_intent`, `natural_language_to_sql` |
 
 ---
 

@@ -2,7 +2,7 @@ import re
 import time
 from typing import Any
 
-from database import get_connection, get_table_columns_map, run_query, table_has_column
+from database import get_table_columns_map, run_query, table_has_column
 from report_store import safe_result
 
 
@@ -29,18 +29,11 @@ def _columns_for_table(table: str) -> list[str]:
     cached = _TABLE_COLUMNS_CACHE.get(table)
     if cached and time.time() - cached[0] < 3600:
         return cached[1]
-    conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute(f"DESCRIBE {table}")
-        columns = [row[0] for row in cursor.fetchall()]
+    # Use the static schema map instead of a live MySQL DESCRIBE query
+    columns = list(get_table_columns_map().get(table, []))
+    if columns:
         _TABLE_COLUMNS_CACHE[table] = (time.time(), columns)
-        return columns
-    except Exception:
-        return []
-    finally:
-        cursor.close()
-        conn.close()
+    return columns
 
 
 def _first_existing(table: str, candidates: list[str]) -> str | None:
