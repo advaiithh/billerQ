@@ -1,0 +1,65 @@
+{
+    "data": {
+        "lanes":[
+        {
+            "id": "lane1",
+            "title": "Todo (2)",
+            "cards": [
+                {
+                    "id": "card1",
+                    "date": "24/7/20",
+                    "title": "Design Dashboard",
+                    "description": "Themeforest, australia",
+                    "label": "Medium",
+                    "customer_img1": "require('../../assets/images/user/3.jpg')",
+                    "customer_img2": "require('../../assets/images/user/1.jpg')",
+                    "customer_img3": "require('../../assets/images/user/5.jpg')"
+                },
+                {
+                    "id": "card2",
+                    "title": "Test Sidebar",
+                    "description": "Envato, australia",
+                    "label": "Urgent"
+                }
+            ]
+        },
+        {
+            "id": "lane2",
+            "title": "Doing (2)",
+            "cards": [
+                {
+                    "id": "card3",
+                    "title": "Test Sidebar",
+                    "description": "Envato, australia",
+                    "label": "Urgent"
+                },
+                {
+                    "id": "card4",
+                    "title": "Test Sidebar",
+                    "description": "Themeforest, australia",
+                    "label": "Low"
+                }
+            ]
+        },
+        {
+            "id": "lane3",
+            "title": "Done (child not dragable)",
+            "cards": [
+                {
+                    "id": "card5",
+                    "title": "Test Sidebar",
+                    "description": "Themeforest, australia",
+                    "label": "Urgent",
+                    "draggable":false
+                },
+                {
+                    "id": "card6",
+                    "title": "Test Sidebar",
+                    "description": "Envato, australia",
+                    "label": "Medium"
+                }
+            ]
+        }
+    ]
+    }
+}

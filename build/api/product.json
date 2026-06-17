@@ -1,0 +1,718 @@
+[
+    {
+        "id": 1,
+        "img": "ecommerce/01.jpg",
+        "name": "Women's Jacket",
+        "note": "Solid Denim Jacket",
+        "discription": "Lorate Solid women's Fashion Full Sleeves Latest Jacket for women With Button Closure Long Sleeve Casual Torn Lycra Denim Jacket..",
+        "discountPrice": "35.00",
+        "status": "none",
+        "price": 120.00,
+        "stock": "In stock",
+        "review": "(120 review)",
+        "category": "Women's Jacket",
+        "rating": 4,
+        "colors": [
+            "White",
+            "gray"
+        ],
+        "size": [
+            "M",
+            "L",
+            "XL"
+        ],
+        "tags": [
+            "Diesel",
+            "Hudson",
+            "Lee"
+        ],
+        "variants": [
+            {
+                "color": "White",
+                "images": "ecommerce/01.jpg"
+            },
+            {
+                "color": "gray",
+                "images": "ecommerce/04.jpg"
+            },
+            {
+                "color": "black",
+                "images": "ecommerce/02.jpg"
+            },
+            {
+                "color": "pink",
+                "images": "ecommerce/03.jpg"
+            }
+        ]
+    },
+    {
+        "id": 2,
+        "img": "ecommerce/02.jpg",
+        "name": "Denim Jacket",
+        "note": "Denim Regular Men's Jacket",
+        "discription": "Lorate Solid Men's Fashion Full Sleeves Latest Jacket for Men With Button Closure Long Sleeve Casual Torn Lycra Denim Jacket.",
+        "discountPrice": "320.00",
+        "status": "sale",
+        "price": 260.00,
+        "stock": "Out of stock",
+        "review": "(120 review)",
+        "rating": 3,
+        "category": "Denim Jacket",
+        "colors": [
+            "green",
+            "gray"
+        ],
+        "size": [
+            "M",
+            "L",
+            "XL"
+        ],
+        "tags": [
+            "Levis",
+            "Hudson",
+            "Lee"
+        ],
+        "variants": [
+            {
+                "color": "White",
+                "images": "ecommerce/01.jpg"
+            },
+            {
+                "color": "gray",
+                "images": "ecommerce/04.jpg"
+            },
+            {
+                "color": "gray",
+                "images": "ecommerce/02.jpg"
+            },
+            {
+                "color": "gray",
+                "images": "ecommerce/03.jpg"
+            }
+        ]
+    },
+    {
+        "id": 3,
+        "img": "ecommerce/03.jpg",
+        "name": "Wonder Woman",
+        "note": "Polyester Blend Women's Fit Dress",
+        "discription": "Ravaiyaa - Attitude is everything Cotton Women's Dresses One Piece Button Dress.",
+        "discountPrice": "110.00",
+        "price": 60.00,
+        "status": "none",
+        "stock": "In stock",
+        "review": "(200 review)",
+        "rating": 2,
+        "category": "Wonder Woman",
+        "colors": [
+            "White",
+            "gray",
+            "blue"
+        ],
+        "size": [
+            "M",
+            "L",
+            "XL"
+        ],
+        "tags": [
+            "Diesel",
+            "Spykar",
+            "Lee"
+        ],
+        "variants": [
+            {
+                "color": "White",
+                "images": "ecommerce/01.jpg"
+            },
+            {
+                "color": "gray",
+                "images": "ecommerce/04.jpg"
+            },
+            {
+                "color": "gray",
+                "images": "ecommerce/02.jpg"
+            },
+            {
+                "color": "gray",
+                "images": "ecommerce/03.jpg"
+            }
+        ]
+    },
+    {
+        "id": 4,
+        "img": "ecommerce/04.jpg",
+        "name": "Roadster",
+        "note": "Cotton Fit Men's Casual Shirt",
+        "discription": "Symbol Men's Solid Regular Fit Full Sleeve Formal Shirt, Cotton Regular Fit Men's Casual Shirt.",
+        "discountPrice": "610.00",
+        "price": 526.00,
+        "status": "50%",
+        "stock": "In stock",
+        "review": "(410 review)",
+        "rating": 1,
+        "category": "Roadster",
+        "colors": [
+            "red",
+            "gray",
+            "blue"
+        ],
+        "size": [
+            "M",
+            "L",
+            "XL"
+        ],
+        "tags": [
+            "Lee",
+            "Levis",
+            "Hudson"
+        ],
+        "variants": [
+            {
+                "color": "White",
+                "images": "ecommerce/01.jpg"
+            },
+            {
+                "color": "gray",
+                "images": "ecommerce/04.jpg"
+            },
+            {
+                "color": "gray",
+                "images": "ecommerce/02.jpg"
+            },
+            {
+                "color": "gray",
+                "images": "ecommerce/03.jpg"
+            }
+        ]
+    },
+    {
+        "id": 5,
+        "img": "ecommerce/05.jpg",
+        "name": "Women T-Shirt",
+        "note": "Silk Cotton Regular Fit T-Shirt",
+        "discription": "Rock Paper Scissors Womens Tank Top High Neck Cotton Top Stylish Women Top..",
+        "discountPrice": "230.00",
+        "price": 206.00,
+        "stock": "In stock",
+        "status": "none",
+        "review": "(120 review)",
+        "rating": 5,
+        "category": "Women T-Shirt",
+        "colors": [
+            "green",
+            "white",
+            "blue"
+        ],
+        "size": [
+            "M",
+            "L",
+            "XL"
+        ],
+        "tags": [
+            "Diesel",
+            "Spykar",
+            "Denien"
+        ],
+        "variants": [
+            {
+                "color": "White",
+                "images": "ecommerce/01.jpg"
+            },
+            {
+                "color": "gray",
+                "images": "ecommerce/04.jpg"
+            }
+        ]
+    },
+    {
+        "id": 6,
+        "img": "ecommerce/06.jpg",
+        "name": "Men's Shirt",
+        "note": "Regular Fit Men's Casual Shirt",
+        "discription": "Symbol Men's Solid Regular Fit Full Sleeve Formal Shirt, Cotton Regular Fit Men's Casual Shirt.",
+        "discountPrice": "560.00",
+        "price": 126.00,
+        "status": "none",
+        "stock": "Out of stock",
+        "review": "(200 review)",
+        "rating": 4,
+        "category": "Men's Shirt",
+        "colors": [
+            "purple",
+            "orange",
+            "blue"
+        ],
+        "size": [
+            "M",
+            "L",
+            "XL"
+        ],
+        "tags": [
+            "Lee",
+            "Diesel",
+            "Levis"
+        ],
+        "variants": [
+            {
+                "color": "White",
+                "images": "ecommerce/01.jpg"
+            },
+            {
+                "color": "gray",
+                "images": "ecommerce/04.jpg"
+            }
+        ]
+    },
+    {
+        "id": 7,
+        "img": "ecommerce/07.jpg",
+        "name": "Man's Jacket",
+        "note": "Denim Regular Men's Jacket",
+        "discription": "Lorate Solid Men's Fashion Full Sleeves Latest Jacket for Men With Button Closure Long Sleeve Casual Torn Lycra Denim Jacket.",
+        "discountPrice": "210.00",
+        "price": 105.00,
+        "status": "sale",
+        "stock": "In stock",
+        "review": "(300 review)",
+        "rating": 3,
+        "category": "Man's Jacket",
+        "colors": [
+            "orange",
+            "pink",
+            "blue"
+        ],
+        "size": [
+            "M",
+            "L",
+            "XL"
+        ],
+        "tags": [
+            "Lee",
+            "Diesel"
+        ],
+        "variants": [
+            {
+                "color": "White",
+                "images": "ecommerce/01.jpg"
+            },
+            {
+                "color": "blue",
+                "images": "ecommerce/04.jpg"
+            }
+        ]
+    },
+    {
+        "id": 8,
+        "img": "ecommerce/08.jpg",
+        "name": "Women's TreckSuit",
+        "note": "Red Regular women's TreckSuit",
+        "discription": "Glamcci Women's Cotton Blend Printed TreckSuit Dress, Rayon Women's Regular Top.",
+        "discountPrice": "700.00",
+        "price": 500.00,
+        "status": "none",
+        "stock": "In stock",
+        "review": "(120 review)",
+        "rating": 5,
+        "category": "Women's TreckSuit",
+        "colors": [
+            "purple",
+            "pink",
+            "blue"
+        ],
+        "size": [
+            "M",
+            "L",
+            "XL"
+        ],
+        "tags": [
+            "Hudson",
+            "Lee"
+        ],
+        "variants": [
+            {
+                "color": "White",
+                "images": "ecommerce/01.jpg"
+            },
+            {
+                "color": "gray",
+                "images": "ecommerce/04.jpg"
+            },
+            {
+                "color": "gray",
+                "images": "ecommerce/02.jpg"
+            },
+            {
+                "color": "gray",
+                "images": "ecommerce/03.jpg"
+            }
+        ]
+    },
+    {
+        "id": 9,
+        "img": "ecommerce/01.jpg",
+        "name": "Women's Jacket",
+        "note": "Sleev Strappy Dress with Jacket",
+        "discription": "Mylo Essentials Pre & Post Maternity/Nursing Maxi Dress with Both Sides Zipper for Easy Feeding – Garden Flowers.",
+        "discountPrice": "780.00",
+        "price": 626.00,
+        "status": "none",
+        "stock": "In stock",
+        "review": "(200 review)",
+        "rating": 5,
+        "category": "Women's Jacket",
+        "colors": [
+            "White",
+            "pink",
+            "blue"
+        ],
+        "size": [
+            "M",
+            "L",
+            "XL"
+        ],
+        "tags": [
+            "Spykar"
+        ],
+        "variants": [
+            {
+                "color": "purple",
+                "images": "ecommerce/01.jpg"
+            },
+            {
+                "color": "pink",
+                "images": "ecommerce/04.jpg"
+            },
+            {
+                "color": "blue",
+                "images": "ecommerce/02.jpg"
+            },
+            {
+                "color": "white",
+                "images": "ecommerce/03.jpg"
+            }
+        ]
+    },
+    {
+        "id": 10,
+        "img": "ecommerce/02.jpg",
+        "name": "Roadster",
+        "note": "Denim Regular Men's Jacket",
+        "discription": "Symbol Men's Solid Regular Fit Full Sleeve Formal Shirt, Cotton Regular Fit Men's Casual Shirt.",
+        "discountPrice": "680.00",
+        "price": 500.00,
+        "status": "none",
+        "stock": "Out of stock",
+        "review": "(410 review)",
+        "rating": 4,
+        "category": "Roadster",
+        "colors": [
+            "purple",
+            "pink",
+            "blue"
+        ],
+        "size": [
+            "M",
+            "L",
+            "XL"
+        ],
+        "tags": [
+            "Hudson",
+            "Lee"
+        ],
+        "variants": [
+            {
+                "color": "White",
+                "images": "ecommerce/01.jpg"
+            },
+            {
+                "color": "gray",
+                "images": "ecommerce/04.jpg"
+            },
+            {
+                "color": "gray",
+                "images": "ecommerce/02.jpg"
+            },
+            {
+                "color": "gray",
+                "images": "ecommerce/03.jpg"
+            }
+        ]
+    },
+    {
+        "id": 11,
+        "img": "ecommerce/03.jpg",
+        "name": "Woman Skirt",
+        "note": "Cotton Blend Women's Skirt",
+        "discription": "Women's Classic Stretchy All Time Trendy Pleated Skirt|Western Skirt |midi Skirt| plited Lehenga.",
+        "discountPrice": "480.00",
+        "price": 426.00,
+        "status": "none",
+        "stock": "In stock",
+        "review": "(120 review)",
+        "rating": 5,
+        "category": "Woman Skirt",
+        "colors": [
+            "White",
+            "pink",
+            "blue"
+        ],
+        "size": [
+            "M",
+            "L",
+            "XL"
+        ],
+        "tags": [
+            "Diesel",
+            "Hudson",
+            "Lee"
+        ],
+        "variants": [
+            {
+                "color": "White",
+                "images": "ecommerce/01.jpg"
+            },
+            {
+                "color": "pink",
+                "images": "ecommerce/04.jpg"
+            },
+            {
+                "color": "blue",
+                "images": "ecommerce/02.jpg"
+            },
+            {
+                "color": "gray",
+                "images": "ecommerce/03.jpg"
+            }
+        ]
+    },
+    {
+        "id": 12,
+        "img": "ecommerce/04.jpg",
+        "name": "Man's Shirt",
+        "note": "Regular Fit Men's Casual Shirt",
+        "discription": "Symbol Men's Solid Regular Fit Full Sleeve Formal Shirt, Cotton Regular Fit Men's Casual Shirt.",
+        "discountPrice": "820.00",
+        "price": 626.00,
+        "status": "none",
+        "stock": "In stock",
+        "review": "(200 review)",
+        "rating": 3,
+        "category": "Man's Shirt",
+        "colors": [
+            "White",
+            "pink",
+            "blue"
+        ],
+        "size": [
+            "M",
+            "L",
+            "XL"
+        ],
+        "tags": [
+            "Diesel",
+            "Hudson",
+            "Lee"
+        ],
+        "variants": [
+            {
+                "color": "White",
+                "images": "ecommerce/01.jpg"
+            },
+            {
+                "color": "pink",
+                "images": "ecommerce/04.jpg"
+            },
+            {
+                "color": "blue",
+                "images": "ecommerce/02.jpg"
+            },
+            {
+                "color": "purple",
+                "images": "ecommerce/03.jpg"
+            }
+        ]
+    },
+    {
+        "id": 13,
+        "img": "ecommerce/05.jpg",
+        "name": "Women T-Shirt",
+        "note": "Cotton Regular Fit T-Shirt",
+        "discription": "Rock Paper Scissors Womens Tank Top High Neck Cotton Top Stylish Women Top.",
+        "discountPrice": "120.00",
+        "price": 50.00,
+        "status": "none",
+        "stock": "In stock",
+        "review": "(300 review)",
+        "rating": 3,
+        "category": "Women T-Shirt",
+        "colors": [
+            "White",
+            "pink",
+            "blue"
+        ],
+        "size": [
+            "M",
+            "L",
+            "XL"
+        ],
+        "tags": [
+            "Diesel",
+            "Hudson",
+            "Lee"
+        ],
+        "variants": [
+            {
+                "color": "White",
+                "images": "ecommerce/01.jpg"
+            },
+            {
+                "color": "pink",
+                "images": "ecommerce/04.jpg"
+            },
+            {
+                "color": "blue",
+                "images": "ecommerce/02.jpg"
+            },
+            {
+                "color": "black",
+                "images": "ecommerce/03.jpg"
+            }
+        ]
+    },
+    {
+        "id": 14,
+        "img": "ecommerce/07.jpg",
+        "name": "Man's Jacket",
+        "note": "Cotton Regular Fit Men's jacket",
+        "discription": "Lorate Solid Men's Fashion Full Sleeves Latest Jacket for Men With Button Closure Long Sleeve Casual Torn Lycra Denim Jacket..",
+        "discountPrice": "180.00",
+        "price": 145.00,
+        "status": "none",
+        "stock": "In stock",
+        "review": "(120 review)",
+        "rating": 2,
+        "category": "Man's Jacket",
+        "colors": [
+            "White",
+            "blue",
+            "yellow"
+        ],
+        "size": [
+            "M",
+            "L",
+            "XL"
+        ],
+        "tags": [
+            "Diesel",
+            "Lee"
+        ],
+        "variants": [
+            {
+                "color": "White",
+                "images": "ecommerce/01.jpg"
+            },
+            {
+                "color": "blue",
+                "images": "ecommerce/04.jpg"
+            },
+            {
+                "color": "yellow",
+                "images": "ecommerce/02.jpg"
+            },
+            {
+                "color": "pink",
+                "images": "ecommerce/03.jpg"
+            }
+        ]
+    },
+    {
+        "id": 15,
+        "img": "ecommerce/08.jpg",
+        "name": "Woman T-Shirt",
+        "note": "Regular Cotton Fit T-Shirt",
+        "discription": "Rock Paper Scissors Womens Tank Top High Neck Cotton Top Stylish Women Top.",
+        "discountPrice": "260.00",
+        "price": 206.00,
+        "status": "Hot",
+        "stock": "In stock",
+        "review": "(200 review)",
+        "rating": 1,
+        "category": "Woman T-Shirt",
+        "colors": [
+            "black",
+            "blue",
+            "yellow"
+        ],
+        "size": [
+            "M",
+            "L",
+            "XL"
+        ],
+        "tags": [
+            "Lee"
+        ],
+        "variants": [
+            {
+                "color": "black",
+                "images": "ecommerce/01.jpg"
+            },
+            {
+                "color": "blue",
+                "images": "ecommerce/04.jpg"
+            },
+            {
+                "color": "yellow",
+                "images": "ecommerce/02.jpg"
+            },
+            {
+                "color": "yellow",
+                "images": "ecommerce/03.jpg"
+            }
+        ]
+    },
+    {
+        "id": 16,
+        "img": "ecommerce/06.jpg",
+        "name": "Man's Jeans",
+        "note": "Denim Regular Men's Jeans",
+        "discription": "Mylo Essentials Pre & Post Maternity/Nursing Maxi jeans with Both Sides Zipper..",
+        "discountPrice": "920.00",
+        "price": 550.00,
+        "status": "none",
+        "stock": "Out of stock",
+        "review": "(300 review)",
+        "rating": 2,
+        "category": "Man's Jeans",
+        "colors": [
+            "black",
+            "pink",
+            "yellow"
+        ],
+        "size": [
+            "M",
+            "L",
+            "XL"
+        ],
+        "tags": [
+            "Hudson"
+        ],
+        "variants": [
+            {
+                "color": "black",
+                "images": "ecommerce/01.jpg"
+            },
+            {
+                "color": "pink",
+                "images": "ecommerce/04.jpg"
+            },
+            {
+                "color": "yellow",
+                "images": "ecommerce/02.jpg"
+            },
+            {
+                "color": "blue",
+                "images": "ecommerce/02.jpg"
+            }
+        ]
+    }
+]
