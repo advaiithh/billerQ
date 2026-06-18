@@ -8,3 +8,5 @@ langchain==0.1.14
 langchain-community==0.0.38
 bcrypt==4.0.1
 openai==1.14.0
+sentence-transformers>=2.2.0
+numpy>=1.22.0

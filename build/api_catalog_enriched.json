@@ -1,0 +1,2364 @@
+[
+  {
+    "endpoint": "/admin/activate-subscription",
+    "category": "subscription",
+    "description": "Retrieves activate subscription in the BillerQ system.",
+    "keywords": [
+      "subscription"
+    ]
+  },
+  {
+    "endpoint": "/admin/add-agent",
+    "category": "general",
+    "description": "Creates a new add agent in the BillerQ system.",
+    "keywords": [
+      "agent",
+      "general"
+    ]
+  },
+  {
+    "endpoint": "/admin/add-area",
+    "category": "area",
+    "description": "Creates a new add area in the BillerQ system.",
+    "keywords": [
+      "area"
+    ]
+  },
+  {
+    "endpoint": "/admin/add-category",
+    "category": "general",
+    "description": "Creates a new add category in the BillerQ system.",
+    "keywords": [
+      "category",
+      "general"
+    ]
+  },
+  {
+    "endpoint": "/admin/add-company",
+    "category": "company",
+    "description": "Creates a new add company in the BillerQ system.",
+    "keywords": [
+      "company"
+    ]
+  },
+  {
+    "endpoint": "/admin/add-customer",
+    "category": "customer",
+    "description": "Creates a new add customer in the BillerQ system.",
+    "keywords": [
+      "customer"
+    ]
+  },
+  {
+    "endpoint": "/admin/add-expense",
+    "category": "expense",
+    "description": "Creates a new add expense in the BillerQ system.",
+    "keywords": [
+      "expense"
+    ]
+  },
+  {
+    "endpoint": "/admin/add-expense-payment",
+    "category": "payment",
+    "description": "Creates a new add expense payment in the BillerQ system.",
+    "keywords": [
+      "expense",
+      "payment"
+    ]
+  },
+  {
+    "endpoint": "/admin/add-income",
+    "category": "income",
+    "description": "Creates a new add income in the BillerQ system.",
+    "keywords": [
+      "income"
+    ]
+  },
+  {
+    "endpoint": "/admin/add-income-payment",
+    "category": "payment",
+    "description": "Creates a new add income payment in the BillerQ system.",
+    "keywords": [
+      "income",
+      "payment"
+    ]
+  },
+  {
+    "endpoint": "/admin/add-package",
+    "category": "package",
+    "description": "Creates a new add package in the BillerQ system.",
+    "keywords": [
+      "package"
+    ]
+  },
+  {
+    "endpoint": "/admin/add-role",
+    "category": "role",
+    "description": "Creates a new add role in the BillerQ system.",
+    "keywords": [
+      "role"
+    ]
+  },
+  {
+    "endpoint": "/admin/add-sales-order",
+    "category": "invoice",
+    "description": "Creates a new add sales order in the BillerQ system.",
+    "keywords": [
+      "invoice",
+      "order",
+      "sales"
+    ]
+  },
+  {
+    "endpoint": "/admin/add-stb",
+    "category": "stb",
+    "description": "Creates a new add stb in the BillerQ system.",
+    "keywords": [
+      "stb"
+    ]
+  },
+  {
+    "endpoint": "/admin/add-tax",
+    "category": "tax",
+    "description": "Creates a new add tax in the BillerQ system.",
+    "keywords": [
+      "tax"
+    ]
+  },
+  {
+    "endpoint": "/admin/add-tax-group",
+    "category": "tax",
+    "description": "Creates a new add tax group in the BillerQ system.",
+    "keywords": [
+      "group",
+      "tax"
+    ]
+  },
+  {
+    "endpoint": "/admin/add-wallet",
+    "category": "payment",
+    "description": "Retrieves add wallet in the BillerQ system.",
+    "keywords": [
+      "payment",
+      "wallet"
+    ]
+  },
+  {
+    "endpoint": "/admin/agent-change-company",
+    "category": "company",
+    "description": "Updates agent change company in the BillerQ system.",
+    "keywords": [
+      "agent",
+      "company"
+    ]
+  },
+  {
+    "endpoint": "/admin/agent-get-complaint",
+    "category": "complaint",
+    "description": "Retrieves agent get complaint in the BillerQ system.",
+    "keywords": [
+      "agent",
+      "complaint"
+    ]
+  },
+  {
+    "endpoint": "/admin/assign-complaint",
+    "category": "complaint",
+    "description": "Retrieves assign complaint in the BillerQ system.",
+    "keywords": [
+      "complaint"
+    ]
+  },
+  {
+    "endpoint": "/admin/assign-enquiry",
+    "category": "enquiry",
+    "description": "Retrieves assign enquiry in the BillerQ system.",
+    "keywords": [
+      "enquiry"
+    ]
+  },
+  {
+    "endpoint": "/admin/bulk-package-change",
+    "category": "package",
+    "description": "Updates bulk package change in the BillerQ system.",
+    "keywords": [
+      "bulk",
+      "package"
+    ]
+  },
+  {
+    "endpoint": "/admin/cancelled-invoice",
+    "category": "invoice",
+    "description": "Deletes cancelled invoice in the BillerQ system.",
+    "keywords": [
+      "cancelled",
+      "invoice"
+    ]
+  },
+  {
+    "endpoint": "/admin/change-account-status",
+    "category": "account",
+    "description": "Updates change account status in the BillerQ system.",
+    "keywords": [
+      "account",
+      "status"
+    ]
+  },
+  {
+    "endpoint": "/admin/change-add-on-status",
+    "category": "addon",
+    "description": "Creates a new change add on status in the BillerQ system.",
+    "keywords": [
+      "addon",
+      "on",
+      "status"
+    ]
+  },
+  {
+    "endpoint": "/admin/change-category-status",
+    "category": "general",
+    "description": "Updates change category status in the BillerQ system.",
+    "keywords": [
+      "category",
+      "general",
+      "status"
+    ]
+  },
+  {
+    "endpoint": "/admin/change-company",
+    "category": "company",
+    "description": "Updates change company in the BillerQ system.",
+    "keywords": [
+      "company"
+    ]
+  },
+  {
+    "endpoint": "/admin/change-customer-password",
+    "category": "customer",
+    "description": "Updates change customer password in the BillerQ system.",
+    "keywords": [
+      "customer",
+      "password"
+    ]
+  },
+  {
+    "endpoint": "/admin/change-customer-status",
+    "category": "customer",
+    "description": "Updates change customer status in the BillerQ system.",
+    "keywords": [
+      "customer",
+      "status"
+    ]
+  },
+  {
+    "endpoint": "/admin/change-header-status",
+    "category": "config",
+    "description": "Updates change header status in the BillerQ system.",
+    "keywords": [
+      "config",
+      "header",
+      "status"
+    ]
+  },
+  {
+    "endpoint": "/admin/change-item-status",
+    "category": "general",
+    "description": "Updates change item status in the BillerQ system.",
+    "keywords": [
+      "general",
+      "item",
+      "status"
+    ]
+  },
+  {
+    "endpoint": "/admin/change-package-status",
+    "category": "package",
+    "description": "Updates change package status in the BillerQ system.",
+    "keywords": [
+      "package",
+      "status"
+    ]
+  },
+  {
+    "endpoint": "/admin/change-problem-type-status",
+    "category": "complaint",
+    "description": "Updates change problem type status in the BillerQ system.",
+    "keywords": [
+      "complaint",
+      "problem",
+      "status",
+      "type"
+    ]
+  },
+  {
+    "endpoint": "/admin/change-provider-status",
+    "category": "provider",
+    "description": "Updates change provider status in the BillerQ system.",
+    "keywords": [
+      "provider",
+      "status"
+    ]
+  },
+  {
+    "endpoint": "/admin/change-vendor-status",
+    "category": "vendor",
+    "description": "Updates change vendor status in the BillerQ system.",
+    "keywords": [
+      "status",
+      "vendor"
+    ]
+  },
+  {
+    "endpoint": "/admin/complaint-process",
+    "category": "complaint",
+    "description": "Retrieves complaint process in the BillerQ system.",
+    "keywords": [
+      "complaint",
+      "process"
+    ]
+  },
+  {
+    "endpoint": "/admin/complaint-status-count",
+    "category": "complaint",
+    "description": "Retrieves complaint status count in the BillerQ system.",
+    "keywords": [
+      "complaint",
+      "count",
+      "status"
+    ]
+  },
+  {
+    "endpoint": "/admin/covert-to-customer",
+    "category": "customer",
+    "description": "Retrieves covert to customer in the BillerQ system.",
+    "keywords": [
+      "covert",
+      "customer",
+      "to"
+    ]
+  },
+  {
+    "endpoint": "/admin/customer-add-on-history",
+    "category": "customer",
+    "description": "Creates a new customer add on history in the BillerQ system.",
+    "keywords": [
+      "customer",
+      "history",
+      "on"
+    ]
+  },
+  {
+    "endpoint": "/admin/customer-dues-import",
+    "category": "customer",
+    "description": "Retrieves customer dues import in the BillerQ system.",
+    "keywords": [
+      "customer",
+      "dues"
+    ]
+  },
+  {
+    "endpoint": "/admin/customer-import",
+    "category": "customer",
+    "description": "Retrieves customer import in the BillerQ system.",
+    "keywords": [
+      "customer"
+    ]
+  },
+  {
+    "endpoint": "/admin/customer-import-report",
+    "category": "customer",
+    "description": "Retrieves customer import report in the BillerQ system.",
+    "keywords": [
+      "customer",
+      "report"
+    ]
+  },
+  {
+    "endpoint": "/admin/customer-subscription-history",
+    "category": "subscription",
+    "description": "Retrieves customer subscription history in the BillerQ system.",
+    "keywords": [
+      "customer",
+      "history",
+      "subscription"
+    ]
+  },
+  {
+    "endpoint": "/admin/deactivate-stb",
+    "category": "stb",
+    "description": "Retrieves deactivate stb in the BillerQ system.",
+    "keywords": [
+      "stb"
+    ]
+  },
+  {
+    "endpoint": "/admin/delete-agent",
+    "category": "general",
+    "description": "Deletes delete agent in the BillerQ system.",
+    "keywords": [
+      "agent",
+      "general"
+    ]
+  },
+  {
+    "endpoint": "/admin/delete-customer-due-import",
+    "category": "customer",
+    "description": "Deletes delete customer due import in the BillerQ system.",
+    "keywords": [
+      "customer",
+      "due"
+    ]
+  },
+  {
+    "endpoint": "/admin/delete-customer-import",
+    "category": "customer",
+    "description": "Deletes delete customer import in the BillerQ system.",
+    "keywords": [
+      "customer"
+    ]
+  },
+  {
+    "endpoint": "/admin/delete-customer-subscription",
+    "category": "subscription",
+    "description": "Deletes delete customer subscription in the BillerQ system.",
+    "keywords": [
+      "customer",
+      "subscription"
+    ]
+  },
+  {
+    "endpoint": "/admin/delete-device-token",
+    "category": "stb",
+    "description": "Deletes delete device token in the BillerQ system.",
+    "keywords": [
+      "device",
+      "stb",
+      "token"
+    ]
+  },
+  {
+    "endpoint": "/admin/delete-enquiry",
+    "category": "enquiry",
+    "description": "Deletes delete enquiry in the BillerQ system.",
+    "keywords": [
+      "enquiry"
+    ]
+  },
+  {
+    "endpoint": "/admin/delete-enquiry-import-report",
+    "category": "report",
+    "description": "Deletes delete enquiry import report in the BillerQ system.",
+    "keywords": [
+      "enquiry",
+      "report"
+    ]
+  },
+  {
+    "endpoint": "/admin/delete-expense",
+    "category": "expense",
+    "description": "Deletes delete expense in the BillerQ system.",
+    "keywords": [
+      "expense"
+    ]
+  },
+  {
+    "endpoint": "/admin/delete-header",
+    "category": "config",
+    "description": "Deletes delete header in the BillerQ system.",
+    "keywords": [
+      "config",
+      "header"
+    ]
+  },
+  {
+    "endpoint": "/admin/delete-income",
+    "category": "income",
+    "description": "Deletes delete income in the BillerQ system.",
+    "keywords": [
+      "income"
+    ]
+  },
+  {
+    "endpoint": "/admin/delete-invoice",
+    "category": "invoice",
+    "description": "Deletes delete invoice in the BillerQ system.",
+    "keywords": [
+      "invoice"
+    ]
+  },
+  {
+    "endpoint": "/admin/delete-notification",
+    "category": "notification",
+    "description": "Deletes delete notification in the BillerQ system.",
+    "keywords": [
+      "notification"
+    ]
+  },
+  {
+    "endpoint": "/admin/delete-problem-type",
+    "category": "complaint",
+    "description": "Deletes delete problem type in the BillerQ system.",
+    "keywords": [
+      "complaint",
+      "problem",
+      "type"
+    ]
+  },
+  {
+    "endpoint": "/admin/delete-provider",
+    "category": "provider",
+    "description": "Deletes delete provider in the BillerQ system.",
+    "keywords": [
+      "provider"
+    ]
+  },
+  {
+    "endpoint": "/admin/delete-role",
+    "category": "role",
+    "description": "Deletes delete role in the BillerQ system.",
+    "keywords": [
+      "role"
+    ]
+  },
+  {
+    "endpoint": "/admin/delete-vendor",
+    "category": "vendor",
+    "description": "Deletes delete vendor in the BillerQ system.",
+    "keywords": [
+      "vendor"
+    ]
+  },
+  {
+    "endpoint": "/admin/delete-wallet-import",
+    "category": "payment",
+    "description": "Retrieves delete wallet import in the BillerQ system.",
+    "keywords": [
+      "payment",
+      "wallet"
+    ]
+  },
+  {
+    "endpoint": "/admin/disconnect-stb",
+    "category": "stb",
+    "description": "Retrieves disconnect stb in the BillerQ system.",
+    "keywords": [
+      "stb"
+    ]
+  },
+  {
+    "endpoint": "/admin/display-provider",
+    "category": "provider",
+    "description": "Retrieves display provider in the BillerQ system.",
+    "keywords": [
+      "display",
+      "provider"
+    ]
+  },
+  {
+    "endpoint": "/admin/do-add-on-import",
+    "category": "addon",
+    "description": "Creates a new do add on import in the BillerQ system.",
+    "keywords": [
+      "addon",
+      "do",
+      "on"
+    ]
+  },
+  {
+    "endpoint": "/admin/do-item-import",
+    "category": "import",
+    "description": "Retrieves do item import in the BillerQ system.",
+    "keywords": [
+      "do",
+      "item"
+    ]
+  },
+  {
+    "endpoint": "/admin/do-package-import",
+    "category": "package",
+    "description": "Retrieves do package import in the BillerQ system.",
+    "keywords": [
+      "do",
+      "package"
+    ]
+  },
+  {
+    "endpoint": "/admin/do-recurring",
+    "category": "subscription",
+    "description": "Retrieves do recurring in the BillerQ system.",
+    "keywords": [
+      "do",
+      "recurring",
+      "subscription"
+    ]
+  },
+  {
+    "endpoint": "/admin/edit-company",
+    "category": "company",
+    "description": "Updates edit company in the BillerQ system.",
+    "keywords": [
+      "company"
+    ]
+  },
+  {
+    "endpoint": "/admin/edit-default-payment-method",
+    "category": "payment",
+    "description": "Updates edit default payment method in the BillerQ system.",
+    "keywords": [
+      "default",
+      "method",
+      "payment"
+    ]
+  },
+  {
+    "endpoint": "/admin/edit-expense",
+    "category": "expense",
+    "description": "Updates edit expense in the BillerQ system.",
+    "keywords": [
+      "expense"
+    ]
+  },
+  {
+    "endpoint": "/admin/edit-header",
+    "category": "config",
+    "description": "Updates edit header in the BillerQ system.",
+    "keywords": [
+      "config",
+      "header"
+    ]
+  },
+  {
+    "endpoint": "/admin/edit-income",
+    "category": "income",
+    "description": "Updates edit income in the BillerQ system.",
+    "keywords": [
+      "income"
+    ]
+  },
+  {
+    "endpoint": "/admin/edit-role",
+    "category": "role",
+    "description": "Updates edit role in the BillerQ system.",
+    "keywords": [
+      "role"
+    ]
+  },
+  {
+    "endpoint": "/admin/edit-sales-order",
+    "category": "invoice",
+    "description": "Updates edit sales order in the BillerQ system.",
+    "keywords": [
+      "invoice",
+      "order",
+      "sales"
+    ]
+  },
+  {
+    "endpoint": "/admin/edit-stb",
+    "category": "stb",
+    "description": "Updates edit stb in the BillerQ system.",
+    "keywords": [
+      "stb"
+    ]
+  },
+  {
+    "endpoint": "/admin/edit-tax",
+    "category": "tax",
+    "description": "Updates edit tax in the BillerQ system.",
+    "keywords": [
+      "tax"
+    ]
+  },
+  {
+    "endpoint": "/admin/edit-vendor",
+    "category": "vendor",
+    "description": "Updates edit vendor in the BillerQ system.",
+    "keywords": [
+      "vendor"
+    ]
+  },
+  {
+    "endpoint": "/admin/enquiry-change-status",
+    "category": "enquiry",
+    "description": "Updates enquiry change status in the BillerQ system.",
+    "keywords": [
+      "enquiry",
+      "status"
+    ]
+  },
+  {
+    "endpoint": "/admin/enquiry-counts",
+    "category": "enquiry",
+    "description": "Retrieves enquiry counts in the BillerQ system.",
+    "keywords": [
+      "counts",
+      "enquiry"
+    ]
+  },
+  {
+    "endpoint": "/admin/enquiry-import",
+    "category": "import",
+    "description": "Retrieves enquiry import in the BillerQ system.",
+    "keywords": [
+      "enquiry"
+    ]
+  },
+  {
+    "endpoint": "/admin/enquiry-import-report",
+    "category": "report",
+    "description": "Retrieves enquiry import report in the BillerQ system.",
+    "keywords": [
+      "enquiry",
+      "report"
+    ]
+  },
+  {
+    "endpoint": "/admin/enquiry-status-count",
+    "category": "report",
+    "description": "Retrieves enquiry status count in the BillerQ system.",
+    "keywords": [
+      "count",
+      "enquiry",
+      "report",
+      "status"
+    ]
+  },
+  {
+    "endpoint": "/admin/followup-change-status",
+    "category": "followup",
+    "description": "Updates followup change status in the BillerQ system.",
+    "keywords": [
+      "followup",
+      "status"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-account-for-select",
+    "category": "account",
+    "description": "Retrieves get account for select in the BillerQ system.",
+    "keywords": [
+      "account",
+      "for",
+      "select"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-add-on-report",
+    "category": "addon",
+    "description": "Retrieves get add on report in the BillerQ system.",
+    "keywords": [
+      "addon",
+      "on",
+      "report"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-add-on-select",
+    "category": "addon",
+    "description": "Retrieves get add on select in the BillerQ system.",
+    "keywords": [
+      "addon",
+      "on",
+      "select"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-agent-collection-report",
+    "category": "report",
+    "description": "Retrieves get agent collection report in the BillerQ system.",
+    "keywords": [
+      "agent",
+      "collection",
+      "report"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-agent-company-change-data",
+    "category": "company",
+    "description": "Retrieves get agent company change data in the BillerQ system.",
+    "keywords": [
+      "agent",
+      "company",
+      "data"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-agent-payments",
+    "category": "payment",
+    "description": "Retrieves get agent payments in the BillerQ system.",
+    "keywords": [
+      "agent",
+      "payment",
+      "payments"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-archived-customer",
+    "category": "customer",
+    "description": "Retrieves get archived customer in the BillerQ system.",
+    "keywords": [
+      "archived",
+      "customer"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-area-select",
+    "category": "area",
+    "description": "Retrieves get area select in the BillerQ system.",
+    "keywords": [
+      "area",
+      "select"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-box-payment",
+    "category": "payment",
+    "description": "Retrieves get box payment in the BillerQ system.",
+    "keywords": [
+      "box",
+      "payment"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-category-data",
+    "category": "general",
+    "description": "Retrieves get category data in the BillerQ system.",
+    "keywords": [
+      "category",
+      "data",
+      "general"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-category-select",
+    "category": "general",
+    "description": "Retrieves get category select in the BillerQ system.",
+    "keywords": [
+      "category",
+      "general",
+      "select"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-company-area",
+    "category": "area",
+    "description": "Retrieves get company area in the BillerQ system.",
+    "keywords": [
+      "area",
+      "company"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-company-change-data",
+    "category": "company",
+    "description": "Retrieves get company change data in the BillerQ system.",
+    "keywords": [
+      "company",
+      "data"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-company-data",
+    "category": "company",
+    "description": "Retrieves get company data in the BillerQ system.",
+    "keywords": [
+      "company",
+      "data"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-complaint",
+    "category": "complaint",
+    "description": "Retrieves get complaint in the BillerQ system.",
+    "keywords": [
+      "complaint"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-connection-data",
+    "category": "general",
+    "description": "Retrieves get connection data in the BillerQ system.",
+    "keywords": [
+      "connection",
+      "data",
+      "general"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-currency-list",
+    "category": "general",
+    "description": "Retrieves get currency list in the BillerQ system.",
+    "keywords": [
+      "currency",
+      "general",
+      "list"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-custom-message-list",
+    "category": "message",
+    "description": "Retrieves get custom message list in the BillerQ system.",
+    "keywords": [
+      "custom",
+      "list",
+      "message"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-customer",
+    "category": "customer",
+    "description": "Retrieves get customer in the BillerQ system.",
+    "keywords": [
+      "customer"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-customer-list",
+    "category": "customer",
+    "description": "Retrieves get customer list in the BillerQ system.",
+    "keywords": [
+      "customer",
+      "list"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-customer-payment-history",
+    "category": "payment",
+    "description": "Retrieves get customer payment history in the BillerQ system.",
+    "keywords": [
+      "customer",
+      "history",
+      "payment"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-customer-payment-report",
+    "category": "payment",
+    "description": "Retrieves get customer payment report in the BillerQ system.",
+    "keywords": [
+      "customer",
+      "payment",
+      "report"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-customer-profile",
+    "category": "customer",
+    "description": "Retrieves get customer profile in the BillerQ system.",
+    "keywords": [
+      "customer",
+      "profile"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-customer-search",
+    "category": "customer",
+    "description": "Retrieves get customer search in the BillerQ system.",
+    "keywords": [
+      "customer",
+      "search"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-customer-status-wise-count",
+    "category": "customer",
+    "description": "Retrieves get customer status wise count in the BillerQ system.",
+    "keywords": [
+      "count",
+      "customer",
+      "status",
+      "wise"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-customer-stb",
+    "category": "customer",
+    "description": "Retrieves get customer stb in the BillerQ system.",
+    "keywords": [
+      "customer",
+      "stb"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-data",
+    "category": "general",
+    "description": "Retrieves get data in the BillerQ system.",
+    "keywords": [
+      "data",
+      "general"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-default-payment-method",
+    "category": "payment",
+    "description": "Retrieves get default payment method in the BillerQ system.",
+    "keywords": [
+      "default",
+      "method",
+      "payment"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-expense",
+    "category": "expense",
+    "description": "Retrieves get expense in the BillerQ system.",
+    "keywords": [
+      "expense"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-expense-details",
+    "category": "expense",
+    "description": "Retrieves get expense details in the BillerQ system.",
+    "keywords": [
+      "details",
+      "expense"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-expense-summary-report",
+    "category": "report",
+    "description": "Retrieves get expense summary report in the BillerQ system.",
+    "keywords": [
+      "expense",
+      "report",
+      "summary"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-header",
+    "category": "config",
+    "description": "Retrieves get header in the BillerQ system.",
+    "keywords": [
+      "config",
+      "header"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-header-select",
+    "category": "config",
+    "description": "Retrieves get header select in the BillerQ system.",
+    "keywords": [
+      "config",
+      "header",
+      "select"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-income",
+    "category": "income",
+    "description": "Retrieves get income in the BillerQ system.",
+    "keywords": [
+      "income"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-income-details",
+    "category": "income",
+    "description": "Retrieves get income details in the BillerQ system.",
+    "keywords": [
+      "details",
+      "income"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-income-summary-report",
+    "category": "report",
+    "description": "Retrieves get income summary report in the BillerQ system.",
+    "keywords": [
+      "income",
+      "report",
+      "summary"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-invoice-amount",
+    "category": "invoice",
+    "description": "Retrieves get invoice amount in the BillerQ system.",
+    "keywords": [
+      "amount",
+      "invoice"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-invoice-data-show",
+    "category": "invoice",
+    "description": "Retrieves get invoice data show in the BillerQ system.",
+    "keywords": [
+      "data",
+      "invoice"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-item-select",
+    "category": "general",
+    "description": "Retrieves get item select in the BillerQ system.",
+    "keywords": [
+      "general",
+      "item",
+      "select"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-last-customerid",
+    "category": "customer",
+    "description": "Retrieves get last customerid in the BillerQ system.",
+    "keywords": [
+      "customer",
+      "customerid",
+      "last"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-message-sent-log",
+    "category": "message",
+    "description": "Retrieves get message sent log in the BillerQ system.",
+    "keywords": [
+      "log",
+      "message",
+      "sent"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-message-settings",
+    "category": "message",
+    "description": "Retrieves get message settings in the BillerQ system.",
+    "keywords": [
+      "message",
+      "settings"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-notification-count",
+    "category": "report",
+    "description": "Retrieves get notification count in the BillerQ system.",
+    "keywords": [
+      "count",
+      "notification",
+      "report"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-online-payment-data",
+    "category": "payment",
+    "description": "Retrieves get online payment data in the BillerQ system.",
+    "keywords": [
+      "data",
+      "online",
+      "payment"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-order-recent-payment",
+    "category": "payment",
+    "description": "Retrieves get order recent payment in the BillerQ system.",
+    "keywords": [
+      "order",
+      "payment",
+      "recent"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-package-report",
+    "category": "package",
+    "description": "Retrieves get package report in the BillerQ system.",
+    "keywords": [
+      "package",
+      "report"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-package-select",
+    "category": "package",
+    "description": "Retrieves get package select in the BillerQ system.",
+    "keywords": [
+      "package",
+      "select"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-payment-due-data",
+    "category": "payment",
+    "description": "Retrieves get payment due data in the BillerQ system.",
+    "keywords": [
+      "data",
+      "due",
+      "payment"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-payment-methods-select",
+    "category": "payment",
+    "description": "Retrieves get payment methods select in the BillerQ system.",
+    "keywords": [
+      "methods",
+      "payment",
+      "select"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-payment-receipt",
+    "category": "payment",
+    "description": "Retrieves get payment receipt in the BillerQ system.",
+    "keywords": [
+      "payment",
+      "receipt"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-pending-subscription-list",
+    "category": "subscription",
+    "description": "Retrieves get pending subscription list in the BillerQ system.",
+    "keywords": [
+      "list",
+      "pending",
+      "subscription"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-problem-type",
+    "category": "complaint",
+    "description": "Retrieves get problem type in the BillerQ system.",
+    "keywords": [
+      "complaint",
+      "problem",
+      "type"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-problem-types",
+    "category": "complaint",
+    "description": "Retrieves get problem types in the BillerQ system.",
+    "keywords": [
+      "complaint",
+      "problem",
+      "types"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-provider-for-select",
+    "category": "provider",
+    "description": "Retrieves get provider for select in the BillerQ system.",
+    "keywords": [
+      "for",
+      "provider",
+      "select"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-recent-order",
+    "category": "invoice",
+    "description": "Retrieves get recent order in the BillerQ system.",
+    "keywords": [
+      "invoice",
+      "order",
+      "recent"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-recent-payment",
+    "category": "payment",
+    "description": "Retrieves get recent payment in the BillerQ system.",
+    "keywords": [
+      "payment",
+      "recent"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-recurring-data",
+    "category": "subscription",
+    "description": "Retrieves get recurring data in the BillerQ system.",
+    "keywords": [
+      "data",
+      "recurring",
+      "subscription"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-role-select",
+    "category": "role",
+    "description": "Retrieves get role select in the BillerQ system.",
+    "keywords": [
+      "role",
+      "select"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-selected-item-detail",
+    "category": "general",
+    "description": "Retrieves get selected item detail in the BillerQ system.",
+    "keywords": [
+      "detail",
+      "general",
+      "item",
+      "selected"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-single-customer-stb",
+    "category": "customer",
+    "description": "Retrieves get single customer stb in the BillerQ system.",
+    "keywords": [
+      "customer",
+      "single",
+      "stb"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-single-subscription",
+    "category": "subscription",
+    "description": "Retrieves get single subscription in the BillerQ system.",
+    "keywords": [
+      "single",
+      "subscription"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-stb-details",
+    "category": "stb",
+    "description": "Retrieves get stb details in the BillerQ system.",
+    "keywords": [
+      "details",
+      "stb"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-stb-plans",
+    "category": "stb",
+    "description": "Retrieves get stb plans in the BillerQ system.",
+    "keywords": [
+      "plans",
+      "stb"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-subscription-report",
+    "category": "subscription",
+    "description": "Retrieves get subscription report in the BillerQ system.",
+    "keywords": [
+      "report",
+      "subscription"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-tax",
+    "category": "tax",
+    "description": "Retrieves get tax in the BillerQ system.",
+    "keywords": [
+      "tax"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-tax-groups",
+    "category": "tax",
+    "description": "Retrieves get tax groups in the BillerQ system.",
+    "keywords": [
+      "groups",
+      "tax"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-tax-rate-name",
+    "category": "tax",
+    "description": "Retrieves get tax rate name in the BillerQ system.",
+    "keywords": [
+      "name",
+      "rate",
+      "tax"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-tax-report",
+    "category": "report",
+    "description": "Retrieves get tax report in the BillerQ system.",
+    "keywords": [
+      "report",
+      "tax"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-tax-select",
+    "category": "tax",
+    "description": "Retrieves get tax select in the BillerQ system.",
+    "keywords": [
+      "select",
+      "tax"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-transaction-list",
+    "category": "general",
+    "description": "Retrieves get transaction list in the BillerQ system.",
+    "keywords": [
+      "general",
+      "list",
+      "transaction"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-unpaid-customers",
+    "category": "customer",
+    "description": "Retrieves get unpaid customers in the BillerQ system.",
+    "keywords": [
+      "customer",
+      "customers",
+      "unpaid"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-user-companies",
+    "category": "customer",
+    "description": "Retrieves get user companies in the BillerQ system.",
+    "keywords": [
+      "companies",
+      "customer",
+      "user"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-user-profile-counts",
+    "category": "customer",
+    "description": "Retrieves get user profile counts in the BillerQ system.",
+    "keywords": [
+      "counts",
+      "customer",
+      "profile",
+      "user"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-user-select",
+    "category": "customer",
+    "description": "Retrieves get user select in the BillerQ system.",
+    "keywords": [
+      "customer",
+      "select",
+      "user"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-vendor",
+    "category": "vendor",
+    "description": "Retrieves get vendor in the BillerQ system.",
+    "keywords": [
+      "vendor"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-vendor-select",
+    "category": "vendor",
+    "description": "Retrieves get vendor select in the BillerQ system.",
+    "keywords": [
+      "select",
+      "vendor"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-wallet-report",
+    "category": "payment",
+    "description": "Retrieves get wallet report in the BillerQ system.",
+    "keywords": [
+      "payment",
+      "report",
+      "wallet"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-whatsapp-sent-log",
+    "category": "message",
+    "description": "Retrieves get whatsapp sent log in the BillerQ system.",
+    "keywords": [
+      "log",
+      "message",
+      "sent",
+      "whatsapp"
+    ]
+  },
+  {
+    "endpoint": "/admin/import-dues-log",
+    "category": "import",
+    "description": "Retrieves import dues log in the BillerQ system.",
+    "keywords": [
+      "dues",
+      "log"
+    ]
+  },
+  {
+    "endpoint": "/admin/import-wallet",
+    "category": "payment",
+    "description": "Retrieves import wallet in the BillerQ system.",
+    "keywords": [
+      "payment",
+      "wallet"
+    ]
+  },
+  {
+    "endpoint": "/admin/lead-count",
+    "category": "report",
+    "description": "Retrieves lead count in the BillerQ system.",
+    "keywords": [
+      "count",
+      "lead",
+      "report"
+    ]
+  },
+  {
+    "endpoint": "/admin/list-notification",
+    "category": "notification",
+    "description": "Retrieves list notification in the BillerQ system.",
+    "keywords": [
+      "list",
+      "notification"
+    ]
+  },
+  {
+    "endpoint": "/admin/message-channel-show",
+    "category": "message",
+    "description": "Retrieves message channel show in the BillerQ system.",
+    "keywords": [
+      "channel",
+      "message"
+    ]
+  },
+  {
+    "endpoint": "/admin/message-channel-store",
+    "category": "message",
+    "description": "Creates a new message channel store in the BillerQ system.",
+    "keywords": [
+      "channel",
+      "message"
+    ]
+  },
+  {
+    "endpoint": "/admin/overdue-list",
+    "category": "general",
+    "description": "Retrieves overdue list in the BillerQ system.",
+    "keywords": [
+      "general",
+      "list",
+      "overdue"
+    ]
+  },
+  {
+    "endpoint": "/admin/overdues",
+    "category": "general",
+    "description": "Retrieves overdues in the BillerQ system.",
+    "keywords": [
+      "general",
+      "overdues"
+    ]
+  },
+  {
+    "endpoint": "/admin/reactivate-stb",
+    "category": "stb",
+    "description": "Retrieves reactivate stb in the BillerQ system.",
+    "keywords": [
+      "stb"
+    ]
+  },
+  {
+    "endpoint": "/admin/receive-agent-payments",
+    "category": "payment",
+    "description": "Retrieves receive agent payments in the BillerQ system.",
+    "keywords": [
+      "agent",
+      "payment",
+      "payments",
+      "receive"
+    ]
+  },
+  {
+    "endpoint": "/admin/reconnect-stb",
+    "category": "stb",
+    "description": "Retrieves reconnect stb in the BillerQ system.",
+    "keywords": [
+      "stb"
+    ]
+  },
+  {
+    "endpoint": "/admin/recurring-this-month",
+    "category": "subscription",
+    "description": "Retrieves recurring this month in the BillerQ system.",
+    "keywords": [
+      "month",
+      "recurring",
+      "subscription",
+      "this"
+    ]
+  },
+  {
+    "endpoint": "/admin/remove-account",
+    "category": "report",
+    "description": "Deletes remove account in the BillerQ system.",
+    "keywords": [
+      "account",
+      "report"
+    ]
+  },
+  {
+    "endpoint": "/admin/remove-add-on",
+    "category": "addon",
+    "description": "Creates a new remove add on in the BillerQ system.",
+    "keywords": [
+      "addon",
+      "on"
+    ]
+  },
+  {
+    "endpoint": "/admin/remove-area",
+    "category": "area",
+    "description": "Deletes remove area in the BillerQ system.",
+    "keywords": [
+      "area"
+    ]
+  },
+  {
+    "endpoint": "/admin/remove-category",
+    "category": "general",
+    "description": "Deletes remove category in the BillerQ system.",
+    "keywords": [
+      "category",
+      "general"
+    ]
+  },
+  {
+    "endpoint": "/admin/remove-company",
+    "category": "company",
+    "description": "Deletes remove company in the BillerQ system.",
+    "keywords": [
+      "company"
+    ]
+  },
+  {
+    "endpoint": "/admin/remove-customer",
+    "category": "customer",
+    "description": "Deletes remove customer in the BillerQ system.",
+    "keywords": [
+      "customer"
+    ]
+  },
+  {
+    "endpoint": "/admin/remove-item",
+    "category": "general",
+    "description": "Deletes remove item in the BillerQ system.",
+    "keywords": [
+      "general",
+      "item"
+    ]
+  },
+  {
+    "endpoint": "/admin/remove-package",
+    "category": "package",
+    "description": "Deletes remove package in the BillerQ system.",
+    "keywords": [
+      "package"
+    ]
+  },
+  {
+    "endpoint": "/admin/remove-payment-method",
+    "category": "payment",
+    "description": "Deletes remove payment method in the BillerQ system.",
+    "keywords": [
+      "method",
+      "payment"
+    ]
+  },
+  {
+    "endpoint": "/admin/remove-stb",
+    "category": "stb",
+    "description": "Deletes remove stb in the BillerQ system.",
+    "keywords": [
+      "stb"
+    ]
+  },
+  {
+    "endpoint": "/admin/remove-tax",
+    "category": "tax",
+    "description": "Deletes remove tax in the BillerQ system.",
+    "keywords": [
+      "tax"
+    ]
+  },
+  {
+    "endpoint": "/admin/restore-invoice",
+    "category": "invoice",
+    "description": "Creates a new restore invoice in the BillerQ system.",
+    "keywords": [
+      "invoice",
+      "restore"
+    ]
+  },
+  {
+    "endpoint": "/admin/reverse-transaction",
+    "category": "payment",
+    "description": "Retrieves reverse transaction in the BillerQ system.",
+    "keywords": [
+      "payment",
+      "reverse",
+      "transaction"
+    ]
+  },
+  {
+    "endpoint": "/admin/send-custom-message",
+    "category": "message",
+    "description": "Retrieves send custom message in the BillerQ system.",
+    "keywords": [
+      "custom",
+      "message",
+      "send"
+    ]
+  },
+  {
+    "endpoint": "/admin/show-account",
+    "category": "report",
+    "description": "Retrieves show account in the BillerQ system.",
+    "keywords": [
+      "account",
+      "report"
+    ]
+  },
+  {
+    "endpoint": "/admin/show-add-on",
+    "category": "addon",
+    "description": "Retrieves show add on in the BillerQ system.",
+    "keywords": [
+      "addon",
+      "on"
+    ]
+  },
+  {
+    "endpoint": "/admin/show-customer",
+    "category": "customer",
+    "description": "Retrieves show customer in the BillerQ system.",
+    "keywords": [
+      "customer"
+    ]
+  },
+  {
+    "endpoint": "/admin/show-customer-subscription",
+    "category": "subscription",
+    "description": "Retrieves show customer subscription in the BillerQ system.",
+    "keywords": [
+      "customer",
+      "subscription"
+    ]
+  },
+  {
+    "endpoint": "/admin/show-enquiry",
+    "category": "enquiry",
+    "description": "Retrieves show enquiry in the BillerQ system.",
+    "keywords": [
+      "enquiry"
+    ]
+  },
+  {
+    "endpoint": "/admin/show-followup",
+    "category": "followup",
+    "description": "Retrieves show followup in the BillerQ system.",
+    "keywords": [
+      "followup"
+    ]
+  },
+  {
+    "endpoint": "/admin/show-item",
+    "category": "general",
+    "description": "Retrieves show item in the BillerQ system.",
+    "keywords": [
+      "general",
+      "item"
+    ]
+  },
+  {
+    "endpoint": "/admin/show-lead",
+    "category": "lead",
+    "description": "Retrieves show lead in the BillerQ system.",
+    "keywords": [
+      "lead"
+    ]
+  },
+  {
+    "endpoint": "/admin/show-order",
+    "category": "invoice",
+    "description": "Retrieves show order in the BillerQ system.",
+    "keywords": [
+      "invoice",
+      "order"
+    ]
+  },
+  {
+    "endpoint": "/admin/show-payment-method",
+    "category": "payment",
+    "description": "Retrieves show payment method in the BillerQ system.",
+    "keywords": [
+      "method",
+      "payment"
+    ]
+  },
+  {
+    "endpoint": "/admin/show-permission",
+    "category": "role",
+    "description": "Retrieves show permission in the BillerQ system.",
+    "keywords": [
+      "permission",
+      "role"
+    ]
+  },
+  {
+    "endpoint": "/admin/show-problem-type",
+    "category": "complaint",
+    "description": "Retrieves show problem type in the BillerQ system.",
+    "keywords": [
+      "complaint",
+      "problem",
+      "type"
+    ]
+  },
+  {
+    "endpoint": "/admin/show-single-customer-add-on",
+    "category": "customer",
+    "description": "Retrieves show single customer add on in the BillerQ system.",
+    "keywords": [
+      "customer",
+      "on",
+      "single"
+    ]
+  },
+  {
+    "endpoint": "/admin/show-single-customer-order",
+    "category": "customer",
+    "description": "Retrieves show single customer order in the BillerQ system.",
+    "keywords": [
+      "customer",
+      "order",
+      "single"
+    ]
+  },
+  {
+    "endpoint": "/admin/show-wallet",
+    "category": "payment",
+    "description": "Retrieves show wallet in the BillerQ system.",
+    "keywords": [
+      "payment",
+      "wallet"
+    ]
+  },
+  {
+    "endpoint": "/admin/stb-select",
+    "category": "stb",
+    "description": "Retrieves stb select in the BillerQ system.",
+    "keywords": [
+      "select",
+      "stb"
+    ]
+  },
+  {
+    "endpoint": "/admin/stb-status-count",
+    "category": "stb",
+    "description": "Retrieves stb status count in the BillerQ system.",
+    "keywords": [
+      "count",
+      "status",
+      "stb"
+    ]
+  },
+  {
+    "endpoint": "/admin/store-account",
+    "category": "report",
+    "description": "Creates a new store account in the BillerQ system.",
+    "keywords": [
+      "account",
+      "report"
+    ]
+  },
+  {
+    "endpoint": "/admin/store-add-on",
+    "category": "addon",
+    "description": "Creates a new store add on in the BillerQ system.",
+    "keywords": [
+      "addon",
+      "on"
+    ]
+  },
+  {
+    "endpoint": "/admin/store-complaint",
+    "category": "complaint",
+    "description": "Creates a new store complaint in the BillerQ system.",
+    "keywords": [
+      "complaint"
+    ]
+  },
+  {
+    "endpoint": "/admin/store-customer-subscription",
+    "category": "subscription",
+    "description": "Creates a new store customer subscription in the BillerQ system.",
+    "keywords": [
+      "customer",
+      "subscription"
+    ]
+  },
+  {
+    "endpoint": "/admin/store-default-payment-method",
+    "category": "payment",
+    "description": "Creates a new store default payment method in the BillerQ system.",
+    "keywords": [
+      "default",
+      "method",
+      "payment"
+    ]
+  },
+  {
+    "endpoint": "/admin/store-device-token",
+    "category": "stb",
+    "description": "Creates a new store device token in the BillerQ system.",
+    "keywords": [
+      "device",
+      "stb",
+      "token"
+    ]
+  },
+  {
+    "endpoint": "/admin/store-enquiry",
+    "category": "enquiry",
+    "description": "Creates a new store enquiry in the BillerQ system.",
+    "keywords": [
+      "enquiry"
+    ]
+  },
+  {
+    "endpoint": "/admin/store-followup",
+    "category": "followup",
+    "description": "Creates a new store followup in the BillerQ system.",
+    "keywords": [
+      "followup"
+    ]
+  },
+  {
+    "endpoint": "/admin/store-header",
+    "category": "config",
+    "description": "Creates a new store header in the BillerQ system.",
+    "keywords": [
+      "config",
+      "header"
+    ]
+  },
+  {
+    "endpoint": "/admin/store-item",
+    "category": "general",
+    "description": "Creates a new store item in the BillerQ system.",
+    "keywords": [
+      "general",
+      "item"
+    ]
+  },
+  {
+    "endpoint": "/admin/store-lead",
+    "category": "lead",
+    "description": "Creates a new store lead in the BillerQ system.",
+    "keywords": [
+      "lead"
+    ]
+  },
+  {
+    "endpoint": "/admin/store-order",
+    "category": "invoice",
+    "description": "Creates a new store order in the BillerQ system.",
+    "keywords": [
+      "invoice",
+      "order"
+    ]
+  },
+  {
+    "endpoint": "/admin/store-payment",
+    "category": "payment",
+    "description": "Creates a new store payment in the BillerQ system.",
+    "keywords": [
+      "payment"
+    ]
+  },
+  {
+    "endpoint": "/admin/store-payment-method",
+    "category": "payment",
+    "description": "Creates a new store payment method in the BillerQ system.",
+    "keywords": [
+      "method",
+      "payment"
+    ]
+  },
+  {
+    "endpoint": "/admin/store-problem-type",
+    "category": "complaint",
+    "description": "Creates a new store problem type in the BillerQ system.",
+    "keywords": [
+      "complaint",
+      "problem",
+      "type"
+    ]
+  },
+  {
+    "endpoint": "/admin/store-provider",
+    "category": "provider",
+    "description": "Creates a new store provider in the BillerQ system.",
+    "keywords": [
+      "provider"
+    ]
+  },
+  {
+    "endpoint": "/admin/store-vendor",
+    "category": "vendor",
+    "description": "Creates a new store vendor in the BillerQ system.",
+    "keywords": [
+      "vendor"
+    ]
+  },
+  {
+    "endpoint": "/admin/tax-group-status-change",
+    "category": "tax",
+    "description": "Updates tax group status change in the BillerQ system.",
+    "keywords": [
+      "group",
+      "status",
+      "tax"
+    ]
+  },
+  {
+    "endpoint": "/admin/toggle-add-on-recurring",
+    "category": "subscription",
+    "description": "Creates a new toggle add on recurring in the BillerQ system.",
+    "keywords": [
+      "on",
+      "recurring",
+      "subscription"
+    ]
+  },
+  {
+    "endpoint": "/admin/toggle-recurring",
+    "category": "subscription",
+    "description": "Retrieves toggle recurring in the BillerQ system.",
+    "keywords": [
+      "recurring",
+      "subscription"
+    ]
+  },
+  {
+    "endpoint": "/admin/update-account",
+    "category": "report",
+    "description": "Updates update account in the BillerQ system.",
+    "keywords": [
+      "account",
+      "report"
+    ]
+  },
+  {
+    "endpoint": "/admin/update-add-on",
+    "category": "addon",
+    "description": "Creates a new update add on in the BillerQ system.",
+    "keywords": [
+      "addon",
+      "on"
+    ]
+  },
+  {
+    "endpoint": "/admin/update-agent",
+    "category": "general",
+    "description": "Updates update agent in the BillerQ system.",
+    "keywords": [
+      "agent",
+      "general"
+    ]
+  },
+  {
+    "endpoint": "/admin/update-area",
+    "category": "area",
+    "description": "Updates update area in the BillerQ system.",
+    "keywords": [
+      "area"
+    ]
+  },
+  {
+    "endpoint": "/admin/update-category",
+    "category": "general",
+    "description": "Updates update category in the BillerQ system.",
+    "keywords": [
+      "category",
+      "general"
+    ]
+  },
+  {
+    "endpoint": "/admin/update-company",
+    "category": "company",
+    "description": "Updates update company in the BillerQ system.",
+    "keywords": [
+      "company"
+    ]
+  },
+  {
+    "endpoint": "/admin/update-complaint",
+    "category": "complaint",
+    "description": "Updates update complaint in the BillerQ system.",
+    "keywords": [
+      "complaint"
+    ]
+  },
+  {
+    "endpoint": "/admin/update-customer",
+    "category": "customer",
+    "description": "Updates update customer in the BillerQ system.",
+    "keywords": [
+      "customer"
+    ]
+  },
+  {
+    "endpoint": "/admin/update-enquiry",
+    "category": "enquiry",
+    "description": "Updates update enquiry in the BillerQ system.",
+    "keywords": [
+      "enquiry"
+    ]
+  },
+  {
+    "endpoint": "/admin/update-expense",
+    "category": "expense",
+    "description": "Updates update expense in the BillerQ system.",
+    "keywords": [
+      "expense"
+    ]
+  },
+  {
+    "endpoint": "/admin/update-header",
+    "category": "config",
+    "description": "Updates update header in the BillerQ system.",
+    "keywords": [
+      "config",
+      "header"
+    ]
+  },
+  {
+    "endpoint": "/admin/update-income",
+    "category": "income",
+    "description": "Updates update income in the BillerQ system.",
+    "keywords": [
+      "income"
+    ]
+  },
+  {
+    "endpoint": "/admin/update-item",
+    "category": "general",
+    "description": "Updates update item in the BillerQ system.",
+    "keywords": [
+      "general",
+      "item"
+    ]
+  },
+  {
+    "endpoint": "/admin/update-notification-status",
+    "category": "notification",
+    "description": "Updates update notification status in the BillerQ system.",
+    "keywords": [
+      "notification",
+      "status"
+    ]
+  },
+  {
+    "endpoint": "/admin/update-package",
+    "category": "package",
+    "description": "Updates update package in the BillerQ system.",
+    "keywords": [
+      "package"
+    ]
+  },
+  {
+    "endpoint": "/admin/update-payment-method",
+    "category": "payment",
+    "description": "Updates update payment method in the BillerQ system.",
+    "keywords": [
+      "method",
+      "payment"
+    ]
+  },
+  {
+    "endpoint": "/admin/update-problem-type",
+    "category": "complaint",
+    "description": "Updates update problem type in the BillerQ system.",
+    "keywords": [
+      "complaint",
+      "problem",
+      "type"
+    ]
+  },
+  {
+    "endpoint": "/admin/update-provider",
+    "category": "provider",
+    "description": "Updates update provider in the BillerQ system.",
+    "keywords": [
+      "provider"
+    ]
+  },
+  {
+    "endpoint": "/admin/update-role",
+    "category": "role",
+    "description": "Updates update role in the BillerQ system.",
+    "keywords": [
+      "role"
+    ]
+  },
+  {
+    "endpoint": "/admin/update-staff-password",
+    "category": "general",
+    "description": "Updates update staff password in the BillerQ system.",
+    "keywords": [
+      "general",
+      "password",
+      "staff"
+    ]
+  },
+  {
+    "endpoint": "/admin/update-stb",
+    "category": "stb",
+    "description": "Updates update stb in the BillerQ system.",
+    "keywords": [
+      "stb"
+    ]
+  },
+  {
+    "endpoint": "/admin/update-tax",
+    "category": "tax",
+    "description": "Updates update tax in the BillerQ system.",
+    "keywords": [
+      "tax"
+    ]
+  },
+  {
+    "endpoint": "/admin/update-tax-group",
+    "category": "tax",
+    "description": "Updates update tax group in the BillerQ system.",
+    "keywords": [
+      "group",
+      "tax"
+    ]
+  },
+  {
+    "endpoint": "/admin/update-vendor",
+    "category": "vendor",
+    "description": "Updates update vendor in the BillerQ system.",
+    "keywords": [
+      "vendor"
+    ]
+  },
+  {
+    "endpoint": "/admin/user-connection-data",
+    "category": "customer",
+    "description": "Retrieves user connection data in the BillerQ system.",
+    "keywords": [
+      "connection",
+      "customer",
+      "data",
+      "user"
+    ]
+  },
+  {
+    "endpoint": "/admin/view-agent",
+    "category": "general",
+    "description": "Retrieves view agent in the BillerQ system.",
+    "keywords": [
+      "agent",
+      "general"
+    ]
+  },
+  {
+    "endpoint": "/admin/view-area",
+    "category": "area",
+    "description": "Retrieves view area in the BillerQ system.",
+    "keywords": [
+      "area"
+    ]
+  },
+  {
+    "endpoint": "/admin/view-company",
+    "category": "company",
+    "description": "Retrieves view company in the BillerQ system.",
+    "keywords": [
+      "company"
+    ]
+  },
+  {
+    "endpoint": "/admin/view-package",
+    "category": "package",
+    "description": "Retrieves view package in the BillerQ system.",
+    "keywords": [
+      "package"
+    ]
+  },
+  {
+    "endpoint": "/admin/view-role",
+    "category": "role",
+    "description": "Retrieves view role in the BillerQ system.",
+    "keywords": [
+      "role"
+    ]
+  },
+  {
+    "endpoint": "/admin/view-stb",
+    "category": "stb",
+    "description": "Retrieves view stb in the BillerQ system.",
+    "keywords": [
+      "stb"
+    ]
+  },
+  {
+    "endpoint": "/admin/wallet-import-report",
+    "category": "payment",
+    "description": "Retrieves wallet import report in the BillerQ system.",
+    "keywords": [
+      "payment",
+      "report",
+      "wallet"
+    ]
+  },
+  {
+    "endpoint": "/get-category/income",
+    "category": "income",
+    "description": "Retrieves get category income in the BillerQ system.",
+    "keywords": [
+      "category",
+      "income"
+    ]
+  },
+  {
+    "endpoint": "/get-category/item",
+    "category": "general",
+    "description": "Retrieves get category item in the BillerQ system.",
+    "keywords": [
+      "category",
+      "general",
+      "item"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-category/expense",
+    "category": "expense",
+    "description": "Retrieves get category expense in the BillerQ system.",
+    "keywords": [
+      "category",
+      "expense"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-category/income",
+    "category": "income",
+    "description": "Retrieves get category income in the BillerQ system.",
+    "keywords": [
+      "category",
+      "income"
+    ]
+  },
+  {
+    "endpoint": "/admin/get-category/item",
+    "category": "general",
+    "description": "Retrieves get category item in the BillerQ system.",
+    "keywords": [
+      "category",
+      "general",
+      "item"
+    ]
+  }
+]

@@ -18,6 +18,13 @@ from memory import (
 )
 from query_logging import init_query_logging_table, log_payload, log_query
 from report_store import get_report, render_report_html, safe_result, store_report
+from semantic_api_search import (
+    load_vector_store,
+    search_apis,
+    find_best_api,
+    categorize_query,
+    get_api_details,
+)
 
 import database
 import re
@@ -55,6 +62,13 @@ async def startup():
     init_auth_tables()
     seed_admin_if_needed()
     init_query_logging_table()
+    # Load the semantic API search vector store (non-blocking)
+    try:
+        load_vector_store(str(BASE_DIR))
+        print("  ✅ API vector store loaded for semantic search")
+    except Exception as e:
+        print(f"  ⚠️  Could not load API vector store: {e}")
+        print("  ℹ️  Run 'python build/run_enrich.py' to generate it.")
 
 
 def get_current_user(request: Request):
@@ -329,6 +343,27 @@ async def chat(body: ChatRequest, request: Request):
                 )
                 return payload
 
+        # Step: Try semantic API search to find matching BillerQ endpoints
+        api_matches = search_apis(effective_msg, top_k=5)
+        api_match_info = None
+        if api_matches and api_matches[0].get("score", 0) > 0.2:
+            best_match = api_matches[0]
+            api_match_info = {
+                "endpoint": best_match["endpoint"],
+                "description": best_match.get("description", ""),
+                "category": best_match.get("category", ""),
+                "score": best_match["score"],
+                "all_matches": [
+                    {
+                        "endpoint": m["endpoint"],
+                        "description": m.get("description", ""),
+                        "category": m.get("category", ""),
+                        "score": m["score"],
+                    }
+                    for m in api_matches[:3]
+                ],
+            }
+
         routed = route_business_query(effective_msg, company_id, scope_label)
         if routed:
             explanation = (
@@ -452,6 +487,7 @@ async def chat(body: ChatRequest, request: Request):
             "service_used": "Database Query",
             "route": "database_query",
             "detail_mode": "expanded" if row_count <= 10 else "collapsed",
+            "api_search": api_match_info,
         }
         _attach_report(payload, user, company_id)
         remember_turn(session_id, user_msg, effective_msg, payload)
@@ -494,6 +530,76 @@ async def clear_cache(request: Request):
         database._COMPANIES_LIST_CACHE = None
         database._COMPANIES_LIST_CACHE_TIME = 0
         return {"success": True, "message": "Cache cleared successfully"}
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+
+# ─────────────────────────────────────────────
+#  Semantic API Search Endpoints
+# ─────────────────────────────────────────────
+
+
+@app.get("/api-search/search")
+async def api_semantic_search(q: str = "", top_k: int = 5):
+    """
+    Search for the best matching BillerQ API endpoints using semantic search.
+    Maps natural language queries to API endpoints.
+    """
+    if not q:
+        return {"success": False, "error": "Query parameter 'q' is required"}
+    try:
+        results = search_apis(q, top_k=top_k)
+        return {
+            "success": True,
+            "query": q,
+            "results": results,
+            "total": len(results),
+        }
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+
+@app.get("/api-search/categorize")
+async def api_categorize_query(q: str = ""):
+    """
+    Analyze a natural language query and determine what category of API is needed.
+    """
+    if not q:
+        return {"success": False, "error": "Query parameter 'q' is required"}
+    try:
+        analysis = categorize_query(q)
+        return {"success": True, "analysis": analysis}
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+
+@app.get("/api-search/best")
+async def api_best_match(q: str = ""):
+    """
+    Return the single best matching API endpoint for a query.
+    """
+    if not q:
+        return {"success": False, "error": "Query parameter 'q' is required"}
+    try:
+        best = find_best_api(q)
+        if best:
+            return {"success": True, "api": best}
+        return {"success": False, "error": "No good match found", "api": None}
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)}, status_code=500)
+
+
+@app.get("/api-search/endpoint/{endpoint_path:path}")
+async def api_endpoint_details(endpoint_path: str):
+    """
+    Get detailed information about a specific API endpoint.
+    """
+    try:
+        full_path = "/" + endpoint_path.lstrip("/")
+        details = get_api_details(full_path)
+        if details:
+            return {"success": True, "api": details}
+        return {"success": False, "error": "Endpoint not found"}
     except Exception as e:
         return JSONResponse({"success": False, "error": str(e)}, status_code=500)
 

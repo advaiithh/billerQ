@@ -1,0 +1,1568 @@
+[
+  {
+    "endpoint": "/admin/activate-subscription",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/add-agent",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/add-area",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/add-category",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/add-company",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/add-customer",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/add-expense",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/add-expense-payment",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/add-income",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/add-income-payment",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/add-package",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/add-role",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/add-sales-order",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/add-stb",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/add-tax",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/add-tax-group",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/add-wallet",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/agent-change-company",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/agent-get-complaint",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/assign-complaint",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/assign-enquiry",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/bulk-package-change",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/cancelled-invoice",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/change-account-status",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/change-add-on-status",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/change-category-status",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/change-company",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/change-customer-password",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/change-customer-status",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/change-header-status",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/change-item-status",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/change-package-status",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/change-problem-type-status",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/change-provider-status",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/change-vendor-status",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/complaint-process",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/complaint-status-count",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/covert-to-customer",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/customer-add-on-history",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/customer-dues-import",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/customer-import",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/customer-import-report",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/customer-subscription-history",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/deactivate-stb",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/delete-agent",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/delete-customer-due-import",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/delete-customer-import",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/delete-customer-subscription",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/delete-device-token",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/delete-enquiry",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/delete-enquiry-import-report",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/delete-expense",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/delete-header",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/delete-income",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/delete-invoice",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/delete-notification",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/delete-problem-type",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/delete-provider",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/delete-role",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/delete-vendor",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/delete-wallet-import",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/disconnect-stb",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/display-provider",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/do-add-on-import",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/do-item-import",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/do-package-import",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/do-recurring",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/edit-company",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/edit-default-payment-method",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/edit-expense",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/edit-header",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/edit-income",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/edit-role",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/edit-sales-order",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/edit-stb",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/edit-tax",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/edit-vendor",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/enquiry-change-status",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/enquiry-counts",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/enquiry-import",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/enquiry-import-report",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/enquiry-status-count",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/followup-change-status",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-account-for-select",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-add-on-report",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-add-on-select",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-agent-collection-report",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-agent-company-change-data",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-agent-payments",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-archived-customer",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-area-select",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-box-payment",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-category-data",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-category-select",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-company-area",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-company-change-data",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-company-data",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-complaint",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-connection-data",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-currency-list",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-custom-message-list",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-customer",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-customer-list",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-customer-payment-history",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-customer-payment-report",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-customer-profile",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-customer-search",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-customer-status-wise-count",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-customer-stb",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-data",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-default-payment-method",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-expense",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-expense-details",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-expense-summary-report",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-header",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-header-select",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-income",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-income-details",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-income-summary-report",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-invoice-amount",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-invoice-data-show",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-item-select",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-last-customerid",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-message-sent-log",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-message-settings",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-notification-count",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-online-payment-data",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-order-recent-payment",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-package-report",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-package-select",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-payment-due-data",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-payment-methods-select",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-payment-receipt",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-pending-subscription-list",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-problem-type",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-problem-types",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-provider-for-select",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-recent-order",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-recent-payment",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-recurring-data",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-role-select",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-selected-item-detail",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-single-customer-stb",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-single-subscription",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-stb-details",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-stb-plans",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-subscription-report",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-tax",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-tax-groups",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-tax-rate-name",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-tax-report",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-tax-select",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-transaction-list",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-unpaid-customers",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-user-companies",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-user-profile-counts",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-user-select",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-vendor",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-vendor-select",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-wallet-report",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-whatsapp-sent-log",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/import-dues-log",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/import-wallet",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/lead-count",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/list-notification",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/message-channel-show",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/message-channel-store",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/overdue-list",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/overdues",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/reactivate-stb",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/receive-agent-payments",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/reconnect-stb",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/recurring-this-month",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/remove-account",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/remove-add-on",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/remove-area",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/remove-category",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/remove-company",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/remove-customer",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/remove-item",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/remove-package",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/remove-payment-method",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/remove-stb",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/remove-tax",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/restore-invoice",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/reverse-transaction",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/send-custom-message",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/show-account",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/show-add-on",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/show-customer",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/show-customer-subscription",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/show-enquiry",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/show-followup",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/show-item",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/show-lead",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/show-order",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/show-payment-method",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/show-permission",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/show-problem-type",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/show-single-customer-add-on",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/show-single-customer-order",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/show-wallet",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/stb-select",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/stb-status-count",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/store-account",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/store-add-on",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/store-complaint",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/store-customer-subscription",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/store-default-payment-method",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/store-device-token",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/store-enquiry",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/store-followup",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/store-header",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/store-item",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/store-lead",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/store-order",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/store-payment",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/store-payment-method",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/store-problem-type",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/store-provider",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/store-vendor",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/tax-group-status-change",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/toggle-add-on-recurring",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/toggle-recurring",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/update-account",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/update-add-on",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/update-agent",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/update-area",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/update-category",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/update-company",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/update-complaint",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/update-customer",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/update-enquiry",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/update-expense",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/update-header",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/update-income",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/update-item",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/update-notification-status",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/update-package",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/update-payment-method",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/update-problem-type",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/update-provider",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/update-role",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/update-staff-password",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/update-stb",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/update-tax",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/update-tax-group",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/update-vendor",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/user-connection-data",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/view-agent",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/view-area",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/view-company",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/view-package",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/view-role",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/view-stb",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/wallet-import-report",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/get-category/income",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/get-category/item",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-category/expense",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-category/income",
+    "category": null,
+    "description": null,
+    "keywords": []
+  },
+  {
+    "endpoint": "/admin/get-category/item",
+    "category": null,
+    "description": null,
+    "keywords": []
+  }
+]
